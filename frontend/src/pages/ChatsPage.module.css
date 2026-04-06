@@ -1,0 +1,53 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse 60% 50% at 60% 50%, rgba(124, 106, 247, 0.05) 0%, transparent 70%),
+    var(--bg);
+}
+
+.placeholderInner {
+  text-align: center;
+  animation: appear 0.4s var(--ease);
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.placeholderIcon {
+  display: block;
+  font-size: 48px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.placeholderTitle {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.placeholderText {
+  font-size: 14px;
+  color: var(--subtle);
+  line-height: 1.6;
+}

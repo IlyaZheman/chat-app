@@ -1,0 +1,145 @@
+.window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.chatInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chatIcon {
+  font-size: 22px;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.chatTitle {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text);
+}
+
+.chatMeta {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.chatId {
+  font-family: var(--font-mono);
+  color: var(--subtle);
+}
+
+/* Messages area */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.emptyState {
+  margin: auto;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 2;
+}
+
+.emptyIcon {
+  display: block;
+  font-size: 32px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Message rows */
+.systemMsg {
+  text-align: center;
+  font-size: 12px;
+  color: var(--subtle);
+  font-family: var(--font-mono);
+  padding: 8px 0;
+}
+
+.msgRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 70%;
+  margin-top: 12px;
+  animation: msgIn 0.18s var(--ease);
+}
+
+.msgRow.continuation {
+  margin-top: 2px;
+}
+
+.msgRow.own {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.senderName {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-hi);
+  margin-bottom: 4px;
+  padding-left: 14px;
+  letter-spacing: 0.02em;
+}
+
+.bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.own .bubble {
+  background: var(--accent-bg);
+  border-color: rgba(124, 106, 247, 0.25);
+  border-radius: 16px 16px 4px 16px;
+}
+
+.bubbleText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.bubbleTime {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--subtle);
+  flex-shrink: 0;
+  align-self: flex-end;
+  margin-bottom: 1px;
+}
