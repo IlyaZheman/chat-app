@@ -1,0 +1,64 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn {
+  margin-top: 4px;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+}
+
+.btn:hover:not(:disabled) { opacity: 0.88; }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error {
+  font-size: 13px;
+  color: var(--danger);
+  background: rgba(247, 90, 90, 0.08);
+  border: 1px solid rgba(247, 90, 90, 0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.link a {
+  color: var(--accent-hi);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link a:hover { text-decoration: underline; }
+
+.spinner {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

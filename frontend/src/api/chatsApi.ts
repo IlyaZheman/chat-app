@@ -1,0 +1,16 @@
+import api from './client'
+import type { Chat, Message } from '../types'
+
+export const chatsApi = {
+  getChats: () =>
+    api.get<Chat[]>('/chats').then(r => r.data),
+
+  getMessages: (chatId: string) =>
+    api.get<Message[]>(`/chats/${chatId}/messages`).then(r => r.data),
+
+  createGroupChat: (name: string) =>
+    api.post<{ chatId: string }>('/chats/group', { name }).then(r => r.data),
+
+  getOrCreatePrivateChat: (targetUserId: string) =>
+    api.post<{ chatId: string }>('/chats/private', { targetUserId }).then(r => r.data),
+}

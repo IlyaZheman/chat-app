@@ -1,0 +1,118 @@
+using Chat.Domain.Enums;
+using Chat.Domain.Interfaces;
+using Chat.Domain.Models;
+using Chat.Infrastructure.Persistence.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace Chat.Infrastructure.Persistence.Repositories;
+
+public class ChatsRepository(AppDbContext context) : IChatsRepository
+{
+    public async Task AddAsync(Domain.Models.Chat chat, CancellationToken ct = default)
+    {
+        var entity = MapToEntity(chat);
+        await context.Chats.AddAsync(entity, ct);
+    }
+
+    public async Task<Domain.Models.Chat?> GetByIdAsync(Guid chatId, CancellationToken ct = default)
+    {
+        var entity = await context.Chats
+            .Include(c => c.Members)
+            .Include(c => c.Messages)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == chatId, ct);
+
+        return entity is null ? null : MapToDomain(entity);
+    }
+
+    public async Task<Domain.Models.Chat?> GetPrivateChatAsync(
+        Guid firstUserId,
+        Guid secondUserId,
+        CancellationToken ct = default)
+    {
+        var entity = await context.Chats
+            .Include(c => c.Members)
+            .AsNoTracking()
+            .Where(c => c.Type == ChatType.Private
+                        && c.Members.Any(m => m.UserId == firstUserId)
+                        && c.Members.Any(m => m.UserId == secondUserId))
+            .FirstOrDefaultAsync(ct);
+
+        return entity is null ? null : MapToDomain(entity);
+    }
+
+    public async Task<IReadOnlyList<Domain.Models.Chat>> GetUserChatsAsync(
+        Guid userId,
+        CancellationToken ct = default)
+    {
+        var entities = await context.Chats
+            .Include(c => c.Members)
+            .AsNoTracking()
+            .Where(c => c.Members.Any(m => m.UserId == userId))
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(ct);
+
+        return entities.Select(MapToDomain).ToList();
+    }
+
+    public async Task AddMessageAsync(Message message, CancellationToken ct = default)
+    {
+        var entity = new MessageEntity
+        {
+            Id = message.Id,
+            ChatId = message.ChatId,
+            SenderId = message.SenderId,
+            Text = message.Text,
+            SentAt = message.SentAt
+        };
+
+        await context.Messages.AddAsync(entity, ct);
+    }
+
+    public async Task<IReadOnlyList<Message>> GetLastMessagesAsync(
+        Guid chatId,
+        int count,
+        CancellationToken ct = default)
+    {
+        var entities = await context.Messages
+            .AsNoTracking()
+            .Where(m => m.ChatId == chatId)
+            .OrderByDescending(m => m.SentAt)
+            .Take(count)
+            .OrderBy(m => m.SentAt)
+            .ToListAsync(ct);
+
+        return entities.Select(e => Message.Restore(e.Id, e.ChatId, e.SenderId, e.Text, e.SentAt)).ToList();
+    }
+
+    public async Task SaveChangesAsync(CancellationToken ct = default)
+    {
+        await context.SaveChangesAsync(ct);
+    }
+
+    // ── Mappers ──────────────────────────────────────────────────────────────
+
+    private static ChatEntity MapToEntity(Domain.Models.Chat chat) => new()
+    {
+        Id = chat.Id,
+        Type = chat.Type,
+        Name = chat.Name,
+        CreatedAt = chat.CreatedAt,
+        Members = chat.Members.Select(m => new ChatMemberEntity
+        {
+            ChatId = m.ChatId,
+            UserId = m.UserId,
+            JoinedAt = m.JoinedAt
+        }).ToList()
+    };
+
+    private static Domain.Models.Chat MapToDomain(ChatEntity entity) =>
+        Domain.Models.Chat.Restore(
+            entity.Id,
+            entity.Type,
+            entity.Name,
+            entity.CreatedAt,
+            entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt)).ToList(),
+            entity.Messages.Select(m => Message.Restore(m.Id, m.ChatId, m.SenderId, m.Text, m.SentAt)).ToList()
+        );
+}
