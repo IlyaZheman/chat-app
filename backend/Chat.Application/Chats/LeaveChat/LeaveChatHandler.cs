@@ -1,6 +1,6 @@
 using Chat.Application.Interfaces;
 
-namespace Chat.Application.Chats.Commands;
+namespace Chat.Application.Chats.LeaveChat;
 
 public class LeaveChatHandler(
     IConnectionStorage connectionStorage,

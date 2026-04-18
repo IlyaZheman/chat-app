@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Chats;
-using Chat.Application.Chats.Commands;
-using Chat.Application.Chats.Queries;
+using Chat.Application.Chats.CreateGroupChat;
+using Chat.Application.Chats.GetChatMessages;
+using Chat.Application.Chats.GetOrCreatePrivateChat;
+using Chat.Application.Chats.GetUserChats;
 
 namespace Chat.API.Endpoints;
 
@@ -78,5 +80,5 @@ public static class ChatsEndpoints
 
     private static Guid GetUserId(ClaimsPrincipal user) =>
         Guid.Parse(user.FindFirstValue("userId")
-            ?? throw new UnauthorizedAccessException());
+                   ?? throw new UnauthorizedAccessException());
 }

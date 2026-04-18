@@ -1,23 +1,24 @@
 using Chat.Application.Interfaces;
+using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
+using Chat.Domain.Models;
 
-namespace Chat.Application.Chats.Commands;
+namespace Chat.Application.Chats.SendMessage;
 
 public class SendMessageHandler(
     IChatsRepository chatsRepository,
     IConnectionStorage connectionStorage,
-    IChatNotifier notifier,
-    IUsersRepository usersRepository)
+    IChatNotifier notifier)
 {
     public async Task HandleAsync(string connectionId, string text, CancellationToken ct = default)
     {
         var connection = await connectionStorage.GetAsync(connectionId, ct)
-            ?? throw new InvalidOperationException("Connection not found.");
+            ?? throw new ForbiddenException("Connection not found. Join a chat first.");
 
-        var chat = await chatsRepository.GetByIdAsync(connection.ChatId, ct)
-            ?? throw new InvalidOperationException("Chat not found.");
+        if (!await chatsRepository.IsMemberAsync(connection.ChatId, connection.UserId, ct))
+            throw new ForbiddenException("User is not a member of this chat.");
 
-        var message = chat.AddMessage(connection.UserId, text);
+        var message = Message.Create(connection.ChatId, connection.UserId, text);
 
         await chatsRepository.AddMessageAsync(message, ct);
         await chatsRepository.SaveChangesAsync(ct);

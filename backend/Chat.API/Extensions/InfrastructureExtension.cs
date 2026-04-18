@@ -8,7 +8,6 @@ using Chat.Infrastructure.Persistence;
 using Chat.Infrastructure.Persistence.Repositories;
 using Chat.Infrastructure.Security;
 using Microsoft.AspNetCore.CookiePolicy;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chat.API.Extensions;
@@ -26,13 +25,13 @@ public static class InfrastructureExtension
 
         services.AddStackExchangeRedisCache(options =>
             options.Configuration = configuration.GetConnectionString("Redis")
-                ?? throw new InvalidOperationException("Redis connection string is missing."));
+                                    ?? throw new InvalidOperationException("Redis connection string is missing."));
 
         services.AddCors(options =>
             options.AddDefaultPolicy(policy =>
             {
                 var origin = configuration.GetConnectionString("Cors")
-                    ?? throw new InvalidOperationException("Cors origin is missing.");
+                             ?? throw new InvalidOperationException("Cors origin is missing.");
                 policy.WithOrigins(origin)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
@@ -41,13 +40,13 @@ public static class InfrastructureExtension
 
         services.AddSignalR();
 
-        // Interface → Implementation bindings
         services.AddScoped<IUsersRepository, UsersRepository>();
         services.AddScoped<IChatsRepository, ChatsRepository>();
         services.AddScoped<IJwtProvider, JwtProvider>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
-        services.AddScoped<IChatNotifier, SignalRChatNotifier<ChatHub>>();
         services.AddScoped<IConnectionStorage, RedisConnectionStorage>();
+
+        services.AddScoped<IChatNotifier, SignalRChatNotifier<ChatHub>>();
 
         return services;
     }

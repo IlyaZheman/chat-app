@@ -1,7 +1,12 @@
-using Chat.Application.Chats.Commands;
-using Chat.Application.Chats.Queries;
-using Chat.Application.Users.Commands;
-using Chat.Application.Users.Queries;
+using Chat.Application.Auth.Login;
+using Chat.Application.Auth.Register;
+using Chat.Application.Chats.CreateGroupChat;
+using Chat.Application.Chats.GetChatMessages;
+using Chat.Application.Chats.GetOrCreatePrivateChat;
+using Chat.Application.Chats.GetUserChats;
+using Chat.Application.Chats.JoinChat;
+using Chat.Application.Chats.LeaveChat;
+using Chat.Application.Chats.SendMessage;
 
 namespace Chat.API.Extensions;
 
@@ -9,18 +14,14 @@ public static class ApplicationExtension
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Users
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<LoginUserHandler>();
 
-        // Chats
         services.AddScoped<JoinChatHandler>();
         services.AddScoped<LeaveChatHandler>();
         services.AddScoped<SendMessageHandler>();
         services.AddScoped<CreateGroupChatHandler>();
         services.AddScoped<GetOrCreatePrivateChatHandler>();
-
-        // Queries
         services.AddScoped<GetUserChatsHandler>();
         services.AddScoped<GetChatMessagesHandler>();
 

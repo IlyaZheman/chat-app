@@ -18,7 +18,6 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
     {
         var entity = await context.Chats
             .Include(c => c.Members)
-            .Include(c => c.Messages)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == chatId, ct);
 
@@ -55,6 +54,12 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
         return entities.Select(MapToDomain).ToList();
     }
 
+    public Task<bool> ExistsAsync(Guid chatId, CancellationToken ct = default) =>
+        context.Chats.AnyAsync(c => c.Id == chatId, ct);
+
+    public Task<bool> IsMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default) =>
+        context.ChatMembers.AnyAsync(m => m.ChatId == chatId && m.UserId == userId, ct);
+
     public async Task AddMessageAsync(Message message, CancellationToken ct = default)
     {
         var entity = new MessageEntity
@@ -82,15 +87,13 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             .OrderBy(m => m.SentAt)
             .ToListAsync(ct);
 
-        return entities.Select(e => Message.Restore(e.Id, e.ChatId, e.SenderId, e.Text, e.SentAt)).ToList();
+        return entities
+            .Select(e => Message.Restore(e.Id, e.ChatId, e.SenderId, e.Text, e.SentAt))
+            .ToList();
     }
 
-    public async Task SaveChangesAsync(CancellationToken ct = default)
-    {
-        await context.SaveChangesAsync(ct);
-    }
-
-    // ── Mappers ──────────────────────────────────────────────────────────────
+    public Task SaveChangesAsync(CancellationToken ct = default) =>
+        context.SaveChangesAsync(ct);
 
     private static ChatEntity MapToEntity(Domain.Models.Chat chat) => new()
     {
@@ -113,6 +116,5 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             entity.Name,
             entity.CreatedAt,
             entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt)).ToList(),
-            entity.Messages.Select(m => Message.Restore(m.Id, m.ChatId, m.SenderId, m.Text, m.SentAt)).ToList()
-        );
+            []);
 }

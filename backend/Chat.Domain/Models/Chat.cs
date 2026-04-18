@@ -6,7 +6,7 @@ public class Chat
 {
     public Guid Id { get; private set; }
     public ChatType Type { get; private set; }
-    public string? Name { get; private set; } // только для групп
+    public string? Name { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     public IReadOnlyCollection<ChatMember> Members => _members.AsReadOnly();
@@ -49,7 +49,6 @@ public class Chat
         return chat;
     }
 
-    // Восстановление из БД — без бизнес-правил
     public static Chat Restore(
         Guid id,
         ChatType type,
@@ -83,7 +82,7 @@ public class Chat
 
     public Message AddMessage(Guid senderId, string text)
     {
-        if (!_members.Any(m => m.UserId == senderId))
+        if (_members.All(m => m.UserId != senderId))
             throw new InvalidOperationException("User is not a member of this chat.");
 
         var message = Message.Create(Id, senderId, text);

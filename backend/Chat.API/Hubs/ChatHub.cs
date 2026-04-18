@@ -1,4 +1,6 @@
-using Chat.Application.Chats.Commands;
+using Chat.Application.Chats.JoinChat;
+using Chat.Application.Chats.LeaveChat;
+using Chat.Application.Chats.SendMessage;
 using Chat.Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -33,9 +35,9 @@ public class ChatHub(
 
     private Guid GetUserId() =>
         Guid.Parse(Context.User?.FindFirst("userId")?.Value
-            ?? throw new HubException("Unauthorized"));
+                   ?? throw new HubException("Unauthorized"));
 
     private string GetUserName() =>
         Context.User?.FindFirst("userName")?.Value
-            ?? throw new HubException("Unauthorized");
+        ?? throw new HubException("Unauthorized");
 }

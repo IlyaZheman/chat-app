@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Chat.Infrastructure.Notifications;
 
-// Принимает IHubContext через интерфейс — конкретный тип Hub подставляется снаружи при регистрации
 public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext) : IChatNotifier
     where THub : Hub<IChatClient>
 {

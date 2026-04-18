@@ -1,6 +1,6 @@
 using Chat.Domain.Interfaces;
 
-namespace Chat.Application.Chats.Queries;
+namespace Chat.Application.Chats.GetUserChats;
 
 public class GetUserChatsHandler(IChatsRepository chatsRepository)
 {

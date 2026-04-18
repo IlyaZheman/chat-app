@@ -1,6 +1,6 @@
 using Chat.Domain.Interfaces;
 
-namespace Chat.Application.Chats.Commands;
+namespace Chat.Application.Chats.CreateGroupChat;
 
 public class CreateGroupChatHandler(IChatsRepository chatsRepository)
 {

@@ -14,7 +14,7 @@ public static class ApiExtension
         services.Configure<JwtOptions>(configuration.GetSection("JwtOptions"));
 
         var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>()
-            ?? throw new InvalidOperationException("JwtOptions section is missing.");
+                         ?? throw new InvalidOperationException("JwtOptions section is missing.");
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

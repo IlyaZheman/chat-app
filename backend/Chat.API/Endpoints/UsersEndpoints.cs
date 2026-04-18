@@ -1,6 +1,7 @@
+using System.Security.Claims;
 using Chat.API.Contracts.Users;
-using Chat.Application.Users.Commands;
-using Chat.Application.Users.Queries;
+using Chat.Application.Auth.Login;
+using Chat.Application.Auth.Register;
 
 namespace Chat.API.Endpoints;
 
@@ -10,6 +11,7 @@ public static class UsersEndpoints
     {
         builder.MapPost("register", Register);
         builder.MapPost("login", Login);
+        builder.MapGet("me", Me).RequireAuthorization();
 
         return builder;
     }
@@ -19,7 +21,7 @@ public static class UsersEndpoints
         RegisterUserHandler handler,
         CancellationToken ct)
     {
-        await handler.HandleAsync(request.UserName, request.Email, request.Password, ct);
+        await handler.HandleAsync(new RegisterUserCommand(request.UserName, request.Email, request.Password), ct);
         return Results.Ok();
     }
 
@@ -29,8 +31,16 @@ public static class UsersEndpoints
         HttpContext context,
         CancellationToken ct)
     {
-        var token = await handler.HandleAsync(request.Email, request.Password, ct);
+        var token = await handler.HandleAsync(new LoginUserQuery(request.Email, request.Password), ct);
         context.Response.Cookies.Append("AuthToken", token);
         return Results.Ok();
+    }
+
+    private static IResult Me(ClaimsPrincipal user)
+    {
+        var userId = user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException();
+        var userName = user.FindFirstValue("userName") ?? throw new UnauthorizedAccessException();
+
+        return Results.Ok(new { userId, userName });
     }
 }

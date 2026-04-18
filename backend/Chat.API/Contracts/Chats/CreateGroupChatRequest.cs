@@ -1,3 +1,5 @@
 ﻿namespace Chat.API.Contracts.Chats;
 
-public record CreateGroupChatRequest(string Name);
+public record CreateGroupChatRequest(
+    string Name
+);
