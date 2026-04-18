@@ -18,7 +18,7 @@ public class SendMessageHandler(
         if (!await chatsRepository.IsMemberAsync(connection.ChatId, connection.UserId, ct))
             throw new ForbiddenException("User is not a member of this chat.");
 
-        var message = Message.Create(connection.ChatId, connection.UserId, text);
+        var message = Message.Create(connection.ChatId, connection.UserId, connection.UserName, text);
 
         await chatsRepository.AddMessageAsync(message, ct);
         await chatsRepository.SaveChangesAsync(ct);

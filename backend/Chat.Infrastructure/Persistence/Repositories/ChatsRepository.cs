@@ -67,6 +67,7 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             Id = message.Id,
             ChatId = message.ChatId,
             SenderId = message.SenderId,
+            SenderName = message.SenderName,
             Text = message.Text,
             SentAt = message.SentAt
         };
@@ -88,7 +89,7 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             .ToListAsync(ct);
 
         return entities
-            .Select(e => Message.Restore(e.Id, e.ChatId, e.SenderId, e.Text, e.SentAt))
+            .Select(e => Message.Restore(e.Id, e.ChatId, e.SenderId, e.SenderName, e.Text, e.SentAt))
             .ToList();
     }
 

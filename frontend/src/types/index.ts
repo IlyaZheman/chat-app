@@ -1,9 +1,3 @@
-export interface User {
-  id: string
-  userName: string
-  email: string
-}
-
 export interface Chat {
   id: string
   type: 'Private' | 'Group'
@@ -13,7 +7,7 @@ export interface Chat {
 
 export interface Message {
   id: string
-  senderId: string
+  senderName: string
   text: string
   sentAt: string
 }

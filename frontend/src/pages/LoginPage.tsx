@@ -22,10 +22,8 @@ export default function LoginPage() {
 
     try {
       await usersApi.login(email, password)
-
-      const parts = email.split('@')
-      setAuth({ userId: crypto.randomUUID(), userName: parts[0] })
-
+      const auth = await usersApi.me()
+      setAuth(auth)
       navigate('/')
     } catch {
       setError('Неверный email или пароль')

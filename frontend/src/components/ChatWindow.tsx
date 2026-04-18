@@ -16,7 +16,6 @@ export default function ChatWindow({ chat }: Props) {
 
   const chatMessages = messages[chat.id] ?? []
 
-  // Скролл вниз при новых сообщениях
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages.length])
@@ -63,10 +62,10 @@ export default function ChatWindow({ chat }: Props) {
         )}
 
         {chatMessages.map((msg, i) => {
-          const isOwn = msg.senderId === auth?.userName || msg.senderId === auth?.userId
-          const isSystem = msg.senderId === 'System'
+          const isOwn = msg.senderName === auth?.userName
+          const isSystem = msg.senderName === 'System'
           const prevMsg = chatMessages[i - 1]
-          const isContinuation = prevMsg && prevMsg.senderId === msg.senderId
+          const isContinuation = prevMsg && prevMsg.senderName === msg.senderName
 
           if (isSystem) {
             return (
@@ -82,7 +81,7 @@ export default function ChatWindow({ chat }: Props) {
               className={`${styles.msgRow} ${isOwn ? styles.own : ''} ${isContinuation ? styles.continuation : ''}`}
             >
               {!isOwn && !isContinuation && (
-                <span className={styles.senderName}>{msg.senderId}</span>
+                <span className={styles.senderName}>{msg.senderName}</span>
               )}
               <div className={styles.bubble}>
                 <span className={styles.bubbleText}>{msg.text}</span>

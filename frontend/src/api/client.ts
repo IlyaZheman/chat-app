@@ -2,7 +2,21 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: '/api',
-  withCredentials: true, // чтобы cookie с JWT отправлялись автоматически
+  withCredentials: true,
 })
+
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      // Импортируем динамически чтобы избежать circular dependency
+      import('../store/authStore').then(({ useAuthStore }) => {
+        useAuthStore.getState().clearAuth()
+      })
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
 
 export default api

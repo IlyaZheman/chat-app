@@ -29,11 +29,14 @@ public static class ChatsEndpoints
         var userId = GetUserId(user);
         var chats = await handler.HandleAsync(userId, ct);
 
-        var response = chats.Select(c => new ChatResponse(
-            c.Id,
-            c.Type.ToString(),
-            c.Name,
-            c.CreatedAt));
+        var response = chats.Select(c =>
+            new ChatResponse(
+                c.Id,
+                c.Type.ToString(),
+                c.Name,
+                c.CreatedAt
+            )
+        );
 
         return Results.Ok(response);
     }
@@ -69,16 +72,18 @@ public static class ChatsEndpoints
         var userId = GetUserId(user);
         var messages = await handler.HandleAsync(chatId, userId, ct: ct);
 
-        var response = messages.Select(m => new MessageResponse(
-            m.Id,
-            m.SenderId,
-            m.Text,
-            m.SentAt));
+        var response = messages.Select(m =>
+            new MessageResponse(
+                m.Id,
+                m.SenderName,
+                m.Text,
+                m.SentAt
+            )
+        );
 
         return Results.Ok(response);
     }
 
     private static Guid GetUserId(ClaimsPrincipal user) =>
-        Guid.Parse(user.FindFirstValue("userId")
-                   ?? throw new UnauthorizedAccessException());
+        Guid.Parse(user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException());
 }

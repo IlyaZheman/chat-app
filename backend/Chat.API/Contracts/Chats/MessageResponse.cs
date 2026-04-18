@@ -2,7 +2,7 @@ namespace Chat.API.Contracts.Chats;
 
 public record MessageResponse(
     Guid Id,
-    Guid SenderId,
+    string SenderName,
     string Text,
     DateTime SentAt
 );
