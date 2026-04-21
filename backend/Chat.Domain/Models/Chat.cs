@@ -69,25 +69,25 @@ public class Chat
         return chat;
     }
 
-    // public void AddMember(Guid userId)
-    // {
-    //     if (Type == ChatType.Private)
-    //         throw new InvalidOperationException("Cannot add members to a private chat.");
-    //
-    //     if (_members.Any(m => m.UserId == userId))
-    //         throw new InvalidOperationException("User is already a member of this chat.");
-    //
-    //     _members.Add(ChatMember.Create(Id, userId));
-    // }
-    //
-    // public Message AddMessage(Guid senderId, string text)
-    // {
-    //     if (_members.All(m => m.UserId != senderId))
-    //         throw new InvalidOperationException("User is not a member of this chat.");
-    //
-    //     var message = Message.Create(Id, senderId, text);
-    //     _messages.Add(message);
-    //
-    //     return message;
-    // }
+    public void AddMember(Guid userId)
+    {
+        if (Type == ChatType.Private)
+            throw new InvalidOperationException("Cannot add members to a private chat.");
+
+        if (_members.Any(m => m.UserId == userId))
+            throw new InvalidOperationException("User is already a member of this chat.");
+
+        _members.Add(ChatMember.Create(Id, userId));
+    }
+
+    public void RemoveMember(Guid userId)
+    {
+        if (Type == ChatType.Private)
+            throw new InvalidOperationException("Cannot leave a private chat.");
+
+        var member = _members.FirstOrDefault(m => m.UserId == userId)
+            ?? throw new InvalidOperationException("User is not a member of this chat.");
+
+        _members.Remove(member);
+    }
 }

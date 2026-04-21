@@ -7,8 +7,7 @@ namespace Chat.Application.Chats.JoinChat;
 
 public class JoinChatHandler(
     IChatsRepository chatsRepository,
-    IConnectionStorage connectionStorage,
-    IChatNotifier notifier)
+    IConnectionStorage connectionStorage)
 {
     public async Task HandleAsync(
         string connectionId,
@@ -25,7 +24,5 @@ public class JoinChatHandler(
 
         var connection = new UserConnection(userId, userName, chatId);
         await connectionStorage.SaveAsync(connectionId, connection, ct);
-
-        await notifier.NotifyUserJoinedAsync(chatId, userName, ct);
     }
 }

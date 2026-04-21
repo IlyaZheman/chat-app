@@ -33,6 +33,10 @@ class ChatHub {
     await this.connection?.invoke('JoinChat', chatId)
   }
 
+  async leaveGroupChat() {
+    await this.connection?.invoke('LeaveGroupChat')
+  }
+
   async sendMessage(text: string) {
     await this.connection?.invoke('SendMessage', text)
   }

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Chats;
+using Chat.Application.Chats.AddMemberToGroupChat;
 using Chat.Application.Chats.CreateGroupChat;
 using Chat.Application.Chats.GetChatMessages;
 using Chat.Application.Chats.GetOrCreatePrivateChat;
@@ -17,6 +18,7 @@ public static class ChatsEndpoints
         chats.MapPost("group", CreateGroupChat);
         chats.MapPost("private", GetOrCreatePrivateChat);
         chats.MapGet("{chatId:guid}/messages", GetMessages);
+        chats.MapPost("{chatId:guid}/members", AddMember);
 
         return builder;
     }
@@ -82,6 +84,18 @@ public static class ChatsEndpoints
         );
 
         return Results.Ok(response);
+    }
+
+    private static async Task<IResult> AddMember(
+        Guid chatId,
+        AddMemberRequest request,
+        ClaimsPrincipal user,
+        AddMemberToGroupChatHandler handler,
+        CancellationToken ct)
+    {
+        var requesterId = GetUserId(user);
+        await handler.HandleAsync(chatId, requesterId, request.UserId, ct);
+        return Results.Ok();
     }
 
     private static Guid GetUserId(ClaimsPrincipal user) =>

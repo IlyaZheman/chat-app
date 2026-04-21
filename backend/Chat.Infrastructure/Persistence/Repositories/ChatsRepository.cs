@@ -93,6 +93,25 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             .ToList();
     }
 
+    public async Task AddMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default)
+    {
+        var entity = new ChatMemberEntity
+        {
+            ChatId = chatId,
+            UserId = userId,
+            JoinedAt = DateTime.UtcNow
+        };
+        await context.ChatMembers.AddAsync(entity, ct);
+    }
+
+    public async Task RemoveMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default)
+    {
+        var entity = await context.ChatMembers
+            .FirstOrDefaultAsync(m => m.ChatId == chatId && m.UserId == userId, ct);
+        if (entity is not null)
+            context.ChatMembers.Remove(entity);
+    }
+
     public Task SaveChangesAsync(CancellationToken ct = default) =>
         context.SaveChangesAsync(ct);
 

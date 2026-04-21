@@ -21,6 +21,15 @@ public class UsersRepository(AppDbContext context) : IUsersRepository
         await context.SaveChangesAsync(ct);
     }
 
+    public async Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var entity = await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+
+        return entity is null ? null : User.Restore(entity.Id, entity.UserName, entity.Email, entity.PasswordHash);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
     {
         var entity = await context.Users

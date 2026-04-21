@@ -2,9 +2,7 @@ using Chat.Application.Interfaces;
 
 namespace Chat.Application.Chats.LeaveChat;
 
-public class LeaveChatHandler(
-    IConnectionStorage connectionStorage,
-    IChatNotifier notifier)
+public class LeaveChatHandler(IConnectionStorage connectionStorage)
 {
     public async Task HandleAsync(string connectionId, CancellationToken ct = default)
     {
@@ -12,6 +10,5 @@ public class LeaveChatHandler(
         if (connection is null) return;
 
         await connectionStorage.RemoveAsync(connectionId, ct);
-        await notifier.NotifyUserLeftAsync(connection.ChatId, connection.UserName, ct);
     }
 }

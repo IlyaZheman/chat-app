@@ -1,5 +1,6 @@
 using Chat.Application.Chats.JoinChat;
 using Chat.Application.Chats.LeaveChat;
+using Chat.Application.Chats.LeaveGroupChat;
 using Chat.Application.Chats.SendMessage;
 using Chat.Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,7 @@ namespace Chat.API.Hubs;
 public class ChatHub(
     JoinChatHandler joinChatHandler,
     LeaveChatHandler leaveChatHandler,
+    LeaveGroupChatHandler leaveGroupChatHandler,
     SendMessageHandler sendMessageHandler) : Hub<IChatClient>
 {
     public async Task JoinChat(Guid chatId)
@@ -20,6 +22,15 @@ public class ChatHub(
 
         await Groups.AddToGroupAsync(Context.ConnectionId, chatId.ToString());
         await joinChatHandler.HandleAsync(Context.ConnectionId, userId, userName, chatId);
+    }
+
+    public async Task LeaveGroupChat()
+    {
+        var userId = GetUserId();
+        var userName = GetUserName();
+
+        var chatId = await leaveGroupChatHandler.HandleAsync(Context.ConnectionId, userId, userName);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
     }
 
     public async Task SendMessage(string text)
@@ -40,4 +51,5 @@ public class ChatHub(
     private string GetUserName() =>
         Context.User?.FindFirst("userName")?.Value
         ?? throw new HubException("Unauthorized");
+
 }
