@@ -1,3 +1,4 @@
+using Chat.Domain.Enums;
 using Chat.Domain.Models;
 
 namespace Chat.Domain.Interfaces;
@@ -11,9 +12,11 @@ public interface IChatsRepository
 
     Task<bool> ExistsAsync(Guid chatId, CancellationToken ct = default);
     Task<bool> IsMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default);
+    Task<ChatMemberRole?> GetMemberRoleAsync(Guid chatId, Guid userId, CancellationToken ct = default);
 
     Task AddMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default);
     Task RemoveMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default);
+    Task DeleteAsync(Guid chatId, CancellationToken ct = default);
 
     Task AddMessageAsync(Message message, CancellationToken ct = default);
     Task<IReadOnlyList<Message>> GetLastMessagesAsync(Guid chatId, int count, CancellationToken ct = default);

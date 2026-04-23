@@ -60,6 +60,15 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
     public Task<bool> IsMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default) =>
         context.ChatMembers.AnyAsync(m => m.ChatId == chatId && m.UserId == userId, ct);
 
+    public async Task<ChatMemberRole?> GetMemberRoleAsync(Guid chatId, Guid userId, CancellationToken ct = default)
+    {
+        var entity = await context.ChatMembers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.ChatId == chatId && m.UserId == userId, ct);
+
+        return entity?.Role;
+    }
+
     public async Task AddMessageAsync(Message message, CancellationToken ct = default)
     {
         var entity = new MessageEntity
@@ -99,7 +108,8 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
         {
             ChatId = chatId,
             UserId = userId,
-            JoinedAt = DateTime.UtcNow
+            JoinedAt = DateTime.UtcNow,
+            Role = ChatMemberRole.Member
         };
         await context.ChatMembers.AddAsync(entity, ct);
     }
@@ -110,6 +120,15 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             .FirstOrDefaultAsync(m => m.ChatId == chatId && m.UserId == userId, ct);
         if (entity is not null)
             context.ChatMembers.Remove(entity);
+    }
+
+    public async Task DeleteAsync(Guid chatId, CancellationToken ct = default)
+    {
+        await using var tx = await context.Database.BeginTransactionAsync(ct);
+        await context.ChatMembers.Where(m => m.ChatId == chatId).ExecuteDeleteAsync(ct);
+        await context.Messages.Where(m => m.ChatId == chatId).ExecuteDeleteAsync(ct);
+        await context.Chats.Where(c => c.Id == chatId).ExecuteDeleteAsync(ct);
+        await tx.CommitAsync(ct);
     }
 
     public Task SaveChangesAsync(CancellationToken ct = default) =>
@@ -125,7 +144,8 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
         {
             ChatId = m.ChatId,
             UserId = m.UserId,
-            JoinedAt = m.JoinedAt
+            JoinedAt = m.JoinedAt,
+            Role = m.Role
         }).ToList()
     };
 
@@ -135,6 +155,6 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             entity.Type,
             entity.Name,
             entity.CreatedAt,
-            entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt)).ToList(),
+            entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt, m.Role)).ToList(),
             []);
 }

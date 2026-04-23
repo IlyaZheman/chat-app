@@ -1,3 +1,6 @@
 namespace Chat.API.Contracts;
 
-public record ErrorResponse(int Status, string Message);
+public record ErrorResponse(
+    int Status,
+    string Message
+);

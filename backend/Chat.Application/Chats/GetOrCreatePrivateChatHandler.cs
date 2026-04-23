@@ -1,6 +1,6 @@
 using Chat.Domain.Interfaces;
 
-namespace Chat.Application.Chats.GetOrCreatePrivateChat;
+namespace Chat.Application.Chats;
 
 public class GetOrCreatePrivateChatHandler(IChatsRepository chatsRepository)
 {

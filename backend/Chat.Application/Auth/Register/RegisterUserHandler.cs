@@ -1,4 +1,5 @@
 ﻿using Chat.Application.Interfaces;
+using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 using Chat.Domain.Models;
 
@@ -13,7 +14,7 @@ public class RegisterUserHandler(
         var existingUser = await usersRepository.GetByEmailAsync(command.Email, ct);
 
         if (existingUser != null)
-            throw new Exception(command.Email);
+            throw new ConflictException($"User with email '{command.Email}' already exists.");
 
         var passwordHash = passwordHasher.Generate(command.Password);
 

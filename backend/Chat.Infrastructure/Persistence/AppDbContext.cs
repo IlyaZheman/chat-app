@@ -1,3 +1,4 @@
+using Chat.Domain.Enums;
 using Chat.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.Property(u => u.Email).IsRequired();
             b.Property(u => u.UserName).IsRequired();
             b.Property(u => u.PasswordHash).IsRequired();
+            b.Property(u => u.Role).IsRequired().HasDefaultValue(UserRole.User);
         });
 
         modelBuilder.Entity<ChatEntity>(b =>
@@ -47,6 +49,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<ChatMemberEntity>(b =>
         {
             b.HasKey(cm => new { cm.ChatId, cm.UserId });
+            b.Property(cm => cm.Role).IsRequired().HasDefaultValue(ChatMemberRole.Member);
 
             b.HasOne(cm => cm.Chat)
                 .WithMany(c => c.Members)

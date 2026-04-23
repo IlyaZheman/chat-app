@@ -14,10 +14,12 @@ public class JwtProvider(IOptions<JwtOptions> options) : IJwtProvider
 
     public string GenerateToken(User user)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim("userId", user.Id.ToString()),
-            new Claim("userName", user.UserName)
+            new("userId", user.Id.ToString()),
+            new("userName", user.UserName),
+            new("role", user.Role.ToString()),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
         var signingCredentials = new SigningCredentials(
