@@ -1,4 +1,5 @@
 using Chat.Domain.Enums;
+using Chat.Domain.Exceptions;
 
 namespace Chat.Domain.Models;
 
@@ -44,7 +45,7 @@ public class Chat
             CreatedAt = DateTime.UtcNow
         };
 
-        chat._members.Add(ChatMember.Create(chat.Id, creatorId));
+        chat._members.Add(ChatMember.Create(chat.Id, creatorId, ChatMemberRole.Owner));
 
         return chat;
     }
@@ -89,5 +90,34 @@ public class Chat
             ?? throw new InvalidOperationException("User is not a member of this chat.");
 
         _members.Remove(member);
+    }
+
+    public void DeleteGroupChat(Guid requesterId)
+    {
+        if (Type != ChatType.Group)
+            throw new InvalidOperationException("Cannot delete a private chat.");
+
+        var member = _members.FirstOrDefault(m => m.UserId == requesterId)
+            ?? throw new ForbiddenException("User is not a member of this chat.");
+
+        if (member.Role != ChatMemberRole.Owner)
+            throw new ForbiddenException("Only the owner can delete this chat.");
+    }
+
+    public void RemoveMemberByOwner(Guid requesterId, Guid targetUserId)
+    {
+        if (Type != ChatType.Group)
+            throw new InvalidOperationException("Cannot remove members from a private chat.");
+
+        var requester = _members.FirstOrDefault(m => m.UserId == requesterId)
+            ?? throw new ForbiddenException("User is not a member of this chat.");
+
+        if (requester.Role != ChatMemberRole.Owner)
+            throw new ForbiddenException("Only the owner can remove members.");
+
+        if (requesterId == targetUserId)
+            throw new InvalidOperationException("Owner cannot remove themselves. Delete the chat instead.");
+
+        RemoveMember(targetUserId);
     }
 }

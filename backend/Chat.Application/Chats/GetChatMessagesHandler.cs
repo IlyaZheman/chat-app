@@ -2,7 +2,7 @@ using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 using Chat.Domain.Models;
 
-namespace Chat.Application.Chats.GetChatMessages;
+namespace Chat.Application.Chats;
 
 public class GetChatMessagesHandler(IChatsRepository chatsRepository)
 {

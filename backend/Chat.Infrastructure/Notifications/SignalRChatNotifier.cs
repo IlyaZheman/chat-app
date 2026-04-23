@@ -26,4 +26,11 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
             .Group(chatId.ToString())
             .ReceiveMessage("System", $"{userName} покинул чат");
     }
+
+    public async Task NotifyChatDeletedAsync(Guid chatId, CancellationToken ct = default)
+    {
+        await hubContext.Clients
+            .Group(chatId.ToString())
+            .ChatDeleted(chatId);
+    }
 }

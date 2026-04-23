@@ -44,7 +44,6 @@ public static class ApiExtension
         {
             options.AddPolicy("AdminPolicy", policy =>
             {
-                policy.RequireClaim("Admin", "true");
                 policy.RequireRole("Admin");
             });
         });

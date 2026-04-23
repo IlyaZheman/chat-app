@@ -1,7 +1,4 @@
-using Chat.Application.Chats.JoinChat;
-using Chat.Application.Chats.LeaveChat;
-using Chat.Application.Chats.LeaveGroupChat;
-using Chat.Application.Chats.SendMessage;
+using Chat.Application.Chats;
 using Chat.Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;

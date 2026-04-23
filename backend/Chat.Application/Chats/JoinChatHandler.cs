@@ -3,7 +3,7 @@ using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 using Chat.Domain.ValueObjects;
 
-namespace Chat.Application.Chats.JoinChat;
+namespace Chat.Application.Chats;
 
 public class JoinChatHandler(
     IChatsRepository chatsRepository,

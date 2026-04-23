@@ -1,3 +1,5 @@
+using Chat.Domain.Enums;
+
 namespace Chat.Domain.Models;
 
 public class User
@@ -6,6 +8,7 @@ public class User
     public string UserName { get; private set; }
     public string PasswordHash { get; private set; }
     public string Email { get; private set; }
+    public UserRole Role { get; private set; }
 
     private User()
     {
@@ -18,10 +21,13 @@ public class User
             Id = Guid.NewGuid(),
             UserName = userName,
             Email = email,
-            PasswordHash = passwordHash
+            PasswordHash = passwordHash,
+            Role = UserRole.User
         };
     }
 
-    public static User Restore(Guid id, string userName, string email, string passwordHash) =>
-        new() { Id = id, UserName = userName, Email = email, PasswordHash = passwordHash };
+    public static User Restore(Guid id, string userName, string email, string passwordHash, UserRole role) =>
+        new() { Id = id, UserName = userName, Email = email, PasswordHash = passwordHash, Role = role };
+
+    public void AssignRole(UserRole role) => Role = role;
 }

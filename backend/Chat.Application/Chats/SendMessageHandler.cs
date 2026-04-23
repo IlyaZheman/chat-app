@@ -3,7 +3,7 @@ using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 using Chat.Domain.Models;
 
-namespace Chat.Application.Chats.SendMessage;
+namespace Chat.Application.Chats;
 
 public class SendMessageHandler(
     IChatsRepository chatsRepository,

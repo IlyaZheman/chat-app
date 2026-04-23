@@ -1,10 +1,6 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Chats;
-using Chat.Application.Chats.AddMemberToGroupChat;
-using Chat.Application.Chats.CreateGroupChat;
-using Chat.Application.Chats.GetChatMessages;
-using Chat.Application.Chats.GetOrCreatePrivateChat;
-using Chat.Application.Chats.GetUserChats;
+using Chat.Application.Chats;
 
 namespace Chat.API.Endpoints;
 
@@ -19,6 +15,8 @@ public static class ChatsEndpoints
         chats.MapPost("private", GetOrCreatePrivateChat);
         chats.MapGet("{chatId:guid}/messages", GetMessages);
         chats.MapPost("{chatId:guid}/members", AddMember);
+        chats.MapDelete("{chatId:guid}", DeleteChat);
+        chats.MapDelete("{chatId:guid}/members/{userId:guid}", RemoveMember);
 
         return builder;
     }
@@ -32,13 +30,11 @@ public static class ChatsEndpoints
         var chats = await handler.HandleAsync(userId, ct);
 
         var response = chats.Select(c =>
-            new ChatResponse(
-                c.Id,
-                c.Type.ToString(),
-                c.Name,
-                c.CreatedAt
-            )
-        );
+        {
+            var member = c.Members.FirstOrDefault(m => m.UserId == userId);
+            var myRole = member?.Role.ToString() ?? "Member";
+            return new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, myRole);
+        });
 
         return Results.Ok(response);
     }
@@ -75,12 +71,7 @@ public static class ChatsEndpoints
         var messages = await handler.HandleAsync(chatId, userId, ct: ct);
 
         var response = messages.Select(m =>
-            new MessageResponse(
-                m.Id,
-                m.SenderName,
-                m.Text,
-                m.SentAt
-            )
+            new MessageResponse(m.Id, m.SenderName, m.Text, m.SentAt)
         );
 
         return Results.Ok(response);
@@ -95,6 +86,29 @@ public static class ChatsEndpoints
     {
         var requesterId = GetUserId(user);
         await handler.HandleAsync(chatId, requesterId, request.UserId, ct);
+        return Results.Ok();
+    }
+
+    private static async Task<IResult> DeleteChat(
+        Guid chatId,
+        ClaimsPrincipal user,
+        DeleteGroupChatHandler handler,
+        CancellationToken ct)
+    {
+        var requesterId = GetUserId(user);
+        await handler.HandleAsync(chatId, requesterId, ct);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> RemoveMember(
+        Guid chatId,
+        Guid userId,
+        ClaimsPrincipal user,
+        RemoveMemberFromGroupChatHandler handler,
+        CancellationToken ct)
+    {
+        var requesterId = GetUserId(user);
+        await handler.HandleAsync(chatId, requesterId, userId, ct);
         return Results.Ok();
     }
 

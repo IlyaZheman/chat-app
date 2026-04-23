@@ -40,7 +40,8 @@ public static class UsersEndpoints
     {
         var userId = user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException();
         var userName = user.FindFirstValue("userName") ?? throw new UnauthorizedAccessException();
+        var role = user.FindFirstValue("role") ?? "User";
 
-        return Results.Ok(new { userId, userName });
+        return Results.Ok(new { userId, userName, role });
     }
 }

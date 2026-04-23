@@ -3,7 +3,7 @@ using Chat.Domain.Enums;
 using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 
-namespace Chat.Application.Chats.LeaveGroupChat;
+namespace Chat.Application.Chats;
 
 public class LeaveGroupChatHandler(
     IChatsRepository chatsRepository,
@@ -27,6 +27,10 @@ public class LeaveGroupChatHandler(
 
         if (!await chatsRepository.IsMemberAsync(connection.ChatId, userId, ct))
             throw new ForbiddenException("User is not a member of this chat.");
+
+        var role = await chatsRepository.GetMemberRoleAsync(connection.ChatId, userId, ct);
+        if (role == ChatMemberRole.Owner)
+            throw new ForbiddenException("The owner cannot leave the chat. Delete the chat instead.");
 
         await chatsRepository.RemoveMemberAsync(connection.ChatId, userId, ct);
         await chatsRepository.SaveChangesAsync(ct);
