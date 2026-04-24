@@ -2,7 +2,13 @@ export interface Chat {
   id: string
   type: 'Private' | 'Group'
   name: string | null
+  otherUserName?: string
   createdAt: string
+}
+
+export interface User {
+  id: string
+  userName: string
 }
 
 export interface Message {

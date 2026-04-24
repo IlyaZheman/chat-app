@@ -33,4 +33,11 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
             .Group(chatId.ToString())
             .ChatDeleted(chatId);
     }
+
+    public async Task NotifyNewPrivateChatAsync(Guid targetUserId, CancellationToken ct = default)
+    {
+        await hubContext.Clients
+            .Group($"user-{targetUserId}")
+            .NewChatCreated();
+    }
 }

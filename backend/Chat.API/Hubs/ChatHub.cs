@@ -12,6 +12,13 @@ public class ChatHub(
     LeaveGroupChatHandler leaveGroupChatHandler,
     SendMessageHandler sendMessageHandler) : Hub<IChatClient>
 {
+    public override async Task OnConnectedAsync()
+    {
+        var userId = GetUserId();
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
+        await base.OnConnectedAsync();
+    }
+
     public async Task JoinChat(Guid chatId)
     {
         var userId = GetUserId();

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Chats;
 using Chat.Application.Chats;
+using Chat.Domain.Enums;
 
 namespace Chat.API.Endpoints;
 
@@ -33,7 +34,10 @@ public static class ChatsEndpoints
         {
             var member = c.Members.FirstOrDefault(m => m.UserId == userId);
             var myRole = member?.Role.ToString() ?? "Member";
-            return new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, myRole);
+            var otherUserName = c.Type == ChatType.Private
+                ? c.Members.FirstOrDefault(m => m.UserId != userId)?.UserName
+                : null;
+            return new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, myRole, otherUserName);
         });
 
         return Results.Ok(response);

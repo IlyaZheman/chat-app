@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useChatsStore } from '../store/chatsStore'
 import { useAuthStore } from '../store/authStore'
-import type { Chat } from '../types'
+import { usersApi } from '../api/usersApi'
+import type { Chat, User } from '../types'
 import styles from './ChatList.module.css'
 
 interface Props {
@@ -15,7 +16,8 @@ export default function ChatList({ onLogout }: Props) {
   const [showNewGroup, setShowNewGroup] = useState(false)
   const [showNewPrivate, setShowNewPrivate] = useState(false)
   const [groupName, setGroupName] = useState('')
-  const [targetUserId, setTargetUserId] = useState('')
+  const [userSearch, setUserSearch] = useState('')
+  const [users, setUsers] = useState<User[]>([])
   const [submitting, setSubmitting] = useState(false)
 
   const handleGroupCreate = async (e: React.FormEvent) => {
@@ -29,24 +31,37 @@ export default function ChatList({ onLogout }: Props) {
     await selectChat(chatId)
   }
 
-  const handlePrivateOpen = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!targetUserId.trim()) return
+  const handleShowPrivate = async () => {
+    const next = !showNewPrivate
+    setShowNewPrivate(next)
+    setShowNewGroup(false)
+    setUserSearch('')
+    if (next) {
+      const list = await usersApi.getUsers()
+      setUsers(list)
+    }
+  }
+
+  const handleSelectUser = async (user: User) => {
     setSubmitting(true)
-    const chatId = await openPrivateChat(targetUserId.trim())
-    setTargetUserId('')
+    const chatId = await openPrivateChat(user.id)
     setShowNewPrivate(false)
+    setUserSearch('')
     setSubmitting(false)
     await selectChat(chatId)
   }
 
   const getChatLabel = (chat: Chat) => {
     if (chat.type === 'Group') return chat.name ?? 'Группа'
-    return 'Личное'
+    return chat.otherUserName ?? 'Личное'
   }
 
   const getChatIcon = (chat: Chat) =>
     chat.type === 'Group' ? '⬡' : '◎'
+
+  const filteredUsers = users.filter(u =>
+    u.userName.toLowerCase().includes(userSearch.toLowerCase())
+  )
 
   return (
     <aside className={styles.sidebar}>
@@ -72,7 +87,7 @@ export default function ChatList({ onLogout }: Props) {
         </button>
         <button
           className={styles.actionBtn}
-          onClick={() => { setShowNewPrivate(p => !p); setShowNewGroup(false) }}
+          onClick={handleShowPrivate}
         >
           <span>+</span> Личное
         </button>
@@ -94,20 +109,32 @@ export default function ChatList({ onLogout }: Props) {
         </form>
       )}
 
-      {/* New private form */}
+      {/* User picker for private chat */}
       {showNewPrivate && (
-        <form className={styles.newChatForm} onSubmit={handlePrivateOpen}>
+        <div className={styles.userPicker}>
           <input
             className={styles.newChatInput}
-            placeholder="ID пользователя"
-            value={targetUserId}
-            onChange={e => setTargetUserId(e.target.value)}
+            placeholder="Поиск пользователя…"
+            value={userSearch}
+            onChange={e => setUserSearch(e.target.value)}
             autoFocus
           />
-          <button className={styles.newChatSubmit} disabled={submitting}>
-            {submitting ? '...' : 'Открыть'}
-          </button>
-        </form>
+          <div className={styles.userList}>
+            {filteredUsers.length === 0 && (
+              <p className={styles.empty}>Нет пользователей</p>
+            )}
+            {filteredUsers.map(u => (
+              <button
+                key={u.id}
+                className={styles.userItem}
+                disabled={submitting}
+                onClick={() => handleSelectUser(u)}
+              >
+                {u.userName}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Chat list */}

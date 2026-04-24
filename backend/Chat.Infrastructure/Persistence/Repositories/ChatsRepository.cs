@@ -18,6 +18,7 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
     {
         var entity = await context.Chats
             .Include(c => c.Members)
+            .ThenInclude(m => m.User)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == chatId, ct);
 
@@ -46,6 +47,7 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
     {
         var entities = await context.Chats
             .Include(c => c.Members)
+            .ThenInclude(m => m.User)
             .AsNoTracking()
             .Where(c => c.Members.Any(m => m.UserId == userId))
             .OrderByDescending(c => c.CreatedAt)
@@ -155,6 +157,6 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             entity.Type,
             entity.Name,
             entity.CreatedAt,
-            entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt, m.Role)).ToList(),
+            entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt, m.Role, m.User?.UserName)).ToList(),
             []);
 }

@@ -1,10 +1,12 @@
 import * as signalR from '@microsoft/signalr'
 
 type MessageHandler = (userName: string, text: string) => void
+type VoidHandler = () => void
 
 class ChatHub {
   private connection: signalR.HubConnection | null = null
   readonly handlers: Set<MessageHandler> = new Set()
+  private readonly newChatHandlers: Set<VoidHandler> = new Set()
 
   async connect() {
     this.connection = new signalR.HubConnectionBuilder()
@@ -13,11 +15,12 @@ class ChatHub {
         .configureLogging(signalR.LogLevel.Information)
         .build()
 
-    // Один глобальный listener на соединении — раздаёт всем подписчикам.
-    // Проблема оригинального кода: каждый вызов onReceiveMessage добавлял
-    // ещё один listener через connection.on() — они накапливались и не чистились.
     this.connection.on('ReceiveMessage', (userName: string, text: string) => {
       this.handlers.forEach(h => h(userName, text))
+    })
+
+    this.connection.on('NewChatCreated', () => {
+      this.newChatHandlers.forEach(h => h())
     })
 
     await this.connection.start()
@@ -47,6 +50,14 @@ class ChatHub {
 
   offReceiveMessage(handler: MessageHandler) {
     this.handlers.delete(handler)
+  }
+
+  onNewChat(handler: VoidHandler) {
+    this.newChatHandlers.add(handler)
+  }
+
+  offNewChat(handler: VoidHandler) {
+    this.newChatHandlers.delete(handler)
   }
 
   get isConnected() {
