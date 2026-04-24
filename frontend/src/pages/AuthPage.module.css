@@ -22,9 +22,18 @@
   min-height: 46px;
 }
 
-.btn:hover:not(:disabled) { opacity: 0.88; }
-.btn:active:not(:disabled) { transform: scale(0.98); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .error {
   font-size: 13px;
@@ -47,18 +56,22 @@
   font-weight: 500;
 }
 
-.link a:hover { text-decoration: underline; }
+.link a:hover {
+  text-decoration: underline;
+}
 
 .spinner {
   display: block;
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

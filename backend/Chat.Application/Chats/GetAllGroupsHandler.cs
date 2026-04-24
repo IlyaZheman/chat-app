@@ -1,5 +1,4 @@
 using Chat.Domain.Interfaces;
-using Chat.Domain.Models;
 
 namespace Chat.Application.Chats;
 

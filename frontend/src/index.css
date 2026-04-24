@@ -5,23 +5,23 @@
 }
 
 :root {
-  --bg:        #0e0e11;
-  --surface:   #16161a;
-  --border:    #242428;
-  --muted:     #3a3a42;
-  --subtle:    #6b6b7a;
-  --text:      #e8e8f0;
-  --text-dim:  #8888a0;
-  --accent:    #7c6af7;
+  --bg: #0e0e11;
+  --surface: #16161a;
+  --border: #242428;
+  --muted: #3a3a42;
+  --subtle: #6b6b7a;
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent: #7c6af7;
   --accent-hi: #a599ff;
   --accent-bg: rgba(124, 106, 247, 0.12);
-  --danger:    #f75a5a;
-  --success:   #4ecdc4;
-  --radius:    10px;
-  --font-ui:   'Syne', sans-serif;
+  --danger: #f75a5a;
+  --success: #4ecdc4;
+  --radius: 10px;
+  --font-ui: 'Syne', sans-serif;
   --font-mono: 'DM Mono', monospace;
   --sidebar-w: 300px;
-  --ease:      cubic-bezier(0.4, 0, 0.2, 1);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html, body, #root {
@@ -36,8 +36,20 @@ input, button, textarea {
   font-family: inherit;
 }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+::-webkit-scrollbar {
+  width: 4px;
+}
 
-::selection { background: var(--accent-bg); color: var(--accent-hi); }
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--accent-bg);
+  color: var(--accent-hi);
+}

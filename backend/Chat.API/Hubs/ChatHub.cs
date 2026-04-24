@@ -10,7 +10,8 @@ public class ChatHub(
     JoinChatHandler joinChatHandler,
     LeaveChatHandler leaveChatHandler,
     LeaveGroupChatHandler leaveGroupChatHandler,
-    SendMessageHandler sendMessageHandler) : Hub<IChatClient>
+    SendMessageHandler sendMessageHandler
+) : Hub<IChatClient>
 {
     public override async Task OnConnectedAsync()
     {
@@ -50,10 +51,9 @@ public class ChatHub(
 
     private Guid GetUserId() =>
         Guid.Parse(Context.User?.FindFirst("userId")?.Value
-                   ?? throw new HubException("Unauthorized"));
+            ?? throw new HubException("Unauthorized"));
 
     private string GetUserName() =>
         Context.User?.FindFirst("userName")?.Value
         ?? throw new HubException("Unauthorized");
-
 }

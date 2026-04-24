@@ -13,7 +13,16 @@ type View = 'list' | 'newGroup' | 'newPrivate' | 'browseGroups'
 
 export default function ChatList({ onLogout }: Props) {
   const auth = useAuthStore(s => s.auth)
-  const { chats, availableGroups, activeChatId, selectChat, createGroup, openPrivateChat, loadAllGroups, joinGroup } = useChatsStore()
+  const {
+    chats,
+    availableGroups,
+    activeChatId,
+    selectChat,
+    createGroup,
+    openPrivateChat,
+    loadAllGroups,
+    joinGroup
+  } = useChatsStore()
 
   const [showMenu, setShowMenu] = useState(false)
   const [view, setView] = useState<View>('list')
@@ -230,19 +239,29 @@ export default function ChatList({ onLogout }: Props) {
         <div className={styles.fabMenu}>
           <button
             className={styles.fabMenuItem}
-            onClick={() => { setShowMenu(false); setGroupName(''); setView('newGroup') }}
+            onClick={() => {
+              setShowMenu(false);
+              setGroupName('');
+              setView('newGroup')
+            }}
           >
             <span>⬡</span> Группа
           </button>
           <button
             className={styles.fabMenuItem}
-            onClick={() => { setShowMenu(false); handleOpenPrivate() }}
+            onClick={() => {
+              setShowMenu(false);
+              handleOpenPrivate()
+            }}
           >
             <span>◎</span> Личное
           </button>
           <button
             className={styles.fabMenuItem}
-            onClick={() => { setShowMenu(false); handleOpenBrowseGroups() }}
+            onClick={() => {
+              setShowMenu(false);
+              handleOpenBrowseGroups()
+            }}
           >
             <span>⬡</span> Найти группу
           </button>
