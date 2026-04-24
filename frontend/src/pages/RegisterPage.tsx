@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { usersApi } from '../api/usersApi'
 import AuthLayout from '../components/AuthLayout'
 import Field from '../components/Field'

@@ -14,7 +14,7 @@ public static class ApiExtension
         services.Configure<JwtOptions>(configuration.GetSection("JwtOptions"));
 
         var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>()
-                         ?? throw new InvalidOperationException("JwtOptions section is missing.");
+            ?? throw new InvalidOperationException("JwtOptions section is missing.");
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -42,10 +42,7 @@ public static class ApiExtension
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("AdminPolicy", policy =>
-            {
-                policy.RequireRole("Admin");
-            });
+            options.AddPolicy("AdminPolicy", policy => { policy.RequireRole("Admin"); });
         });
 
         return services;

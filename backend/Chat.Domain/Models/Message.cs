@@ -9,7 +9,9 @@ public class Message
     public string Text { get; private set; } = string.Empty;
     public DateTime SentAt { get; private set; }
 
-    private Message() { }
+    private Message()
+    {
+    }
 
     public static Message Create(Guid chatId, Guid senderId, string senderName, string text)
     {
@@ -27,6 +29,12 @@ public class Message
         };
     }
 
-    public static Message Restore(Guid id, Guid chatId, Guid senderId, string senderName, string text, DateTime sentAt) =>
+    public static Message Restore(
+        Guid id,
+        Guid chatId,
+        Guid senderId,
+        string senderName,
+        string text,
+        DateTime sentAt) =>
         new() { Id = id, ChatId = chatId, SenderId = senderId, SenderName = senderName, Text = text, SentAt = sentAt };
 }

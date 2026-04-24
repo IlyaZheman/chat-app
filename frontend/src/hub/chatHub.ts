@@ -4,16 +4,20 @@ type MessageHandler = (userName: string, text: string) => void
 type VoidHandler = () => void
 
 class ChatHub {
-  private connection: signalR.HubConnection | null = null
   readonly handlers: Set<MessageHandler> = new Set()
+  private connection: signalR.HubConnection | null = null
   private readonly newChatHandlers: Set<VoidHandler> = new Set()
+
+  get isConnected() {
+    return this.connection?.state === signalR.HubConnectionState.Connected
+  }
 
   async connect() {
     this.connection = new signalR.HubConnectionBuilder()
-        .withUrl('/chat', { withCredentials: true })
-        .withAutomaticReconnect()
-        .configureLogging(signalR.LogLevel.Information)
-        .build()
+      .withUrl('/chat', { withCredentials: true })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Information)
+      .build()
 
     this.connection.on('ReceiveMessage', (userName: string, text: string) => {
       this.handlers.forEach(h => h(userName, text))
@@ -58,10 +62,6 @@ class ChatHub {
 
   offNewChat(handler: VoidHandler) {
     this.newChatHandlers.delete(handler)
-  }
-
-  get isConnected() {
-    return this.connection?.state === signalR.HubConnectionState.Connected
   }
 }
 

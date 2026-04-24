@@ -9,7 +9,6 @@ api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      // Импортируем динамически чтобы избежать circular dependency
       import('../store/authStore').then(({ useAuthStore }) => {
         useAuthStore.getState().clearAuth()
       })

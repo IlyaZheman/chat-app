@@ -25,13 +25,13 @@ public static class InfrastructureExtension
 
         services.AddStackExchangeRedisCache(options =>
             options.Configuration = configuration.GetConnectionString("Redis")
-                                    ?? throw new InvalidOperationException("Redis connection string is missing."));
+                ?? throw new InvalidOperationException("Redis connection string is missing."));
 
         services.AddCors(options =>
             options.AddDefaultPolicy(policy =>
             {
                 var origin = configuration.GetConnectionString("Cors")
-                             ?? throw new InvalidOperationException("Cors origin is missing.");
+                    ?? throw new InvalidOperationException("Cors origin is missing.");
                 policy.WithOrigins(origin)
                     .AllowAnyHeader()
                     .AllowAnyMethod()

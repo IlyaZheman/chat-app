@@ -28,7 +28,9 @@
   border-color: var(--accent);
 }
 
-.input::placeholder { color: var(--muted); }
+.input::placeholder {
+  color: var(--muted);
+}
 
 .input:disabled {
   opacity: 0.4;
@@ -52,6 +54,15 @@
   line-height: 1;
 }
 
-.sendBtn:hover:not(:disabled) { opacity: 0.85; }
-.sendBtn:active:not(:disabled) { transform: scale(0.92); }
-.sendBtn:disabled { opacity: 0.3; cursor: not-allowed; }
+.sendBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.sendBtn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.sendBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

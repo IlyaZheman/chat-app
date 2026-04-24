@@ -25,6 +25,11 @@ public class ChatMember
         };
     }
 
-    public static ChatMember Restore(Guid chatId, Guid userId, DateTime joinedAt, ChatMemberRole role, string? userName = null) =>
+    public static ChatMember Restore(
+        Guid chatId,
+        Guid userId,
+        DateTime joinedAt,
+        ChatMemberRole role,
+        string? userName = null) =>
         new() { ChatId = chatId, UserId = userId, JoinedAt = joinedAt, Role = role, UserName = userName };
 }

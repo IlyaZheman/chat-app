@@ -34,8 +34,8 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             .Include(c => c.Members)
             .AsNoTracking()
             .Where(c => c.Type == ChatType.Private
-                        && c.Members.Any(m => m.UserId == firstUserId)
-                        && c.Members.Any(m => m.UserId == secondUserId))
+                && c.Members.Any(m => m.UserId == firstUserId)
+                && c.Members.Any(m => m.UserId == secondUserId))
             .FirstOrDefaultAsync(ct);
 
         return entity is null ? null : MapToDomain(entity);
@@ -170,6 +170,8 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             entity.Type,
             entity.Name,
             entity.CreatedAt,
-            entity.Members.Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt, m.Role, m.User?.UserName)).ToList(),
+            entity.Members
+                .Select(m => ChatMember.Restore(m.ChatId, m.UserId, m.JoinedAt, m.Role, m.User?.UserName))
+                .ToList(),
             []);
 }

@@ -8,7 +8,9 @@ export const usersApi = {
   login: (email: string, password: string) =>
     api.post('/login', { email, password }),
 
-  me: () => api.get<AuthState>('/me').then(r => r.data),
+  me: () =>
+    api.get<AuthState>('/me').then(r => r.data),
 
-  getUsers: () => api.get<User[]>('/users').then(r => r.data),
+  getUsers: () =>
+    api.get<User[]>('/users').then(r => r.data),
 }
