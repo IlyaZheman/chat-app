@@ -7,11 +7,12 @@ import styles from './ChatList.module.css'
 
 interface Props {
   onLogout: () => void
+  onChatOpen?: () => void
 }
 
 type View = 'list' | 'newGroup' | 'newPrivate' | 'browseGroups'
 
-export default function ChatList({ onLogout }: Props) {
+export default function ChatList({ onLogout, onChatOpen }: Props) {
   const auth = useAuthStore(s => s.auth)
   const {
     chats,
@@ -40,6 +41,7 @@ export default function ChatList({ onLogout }: Props) {
     setView('list')
     setSubmitting(false)
     await selectChat(chatId)
+    onChatOpen?.()
   }
 
   const handleOpenPrivate = async () => {
@@ -61,6 +63,7 @@ export default function ChatList({ onLogout }: Props) {
     setView('list')
     setSubmitting(false)
     await selectChat(chatId)
+    onChatOpen?.()
   }
 
   const handleSelectUser = async (user: User) => {
@@ -70,6 +73,7 @@ export default function ChatList({ onLogout }: Props) {
     setUserSearch('')
     setSubmitting(false)
     await selectChat(chatId)
+    onChatOpen?.()
   }
 
   const goBack = () => {
@@ -220,7 +224,10 @@ export default function ChatList({ onLogout }: Props) {
           <button
             key={chat.id}
             className={`${styles.chatItem} ${activeChatId === chat.id ? styles.active : ''}`}
-            onClick={() => selectChat(chat.id)}
+            onClick={() => {
+              selectChat(chat.id);
+              onChatOpen?.()
+            }}
           >
             <span className={styles.chatIcon}>{getChatIcon(chat)}</span>
             <span className={styles.chatLabel}>{getChatLabel(chat)}</span>

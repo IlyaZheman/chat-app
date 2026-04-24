@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChatsStore } from '../store/chatsStore'
 import { useAuthStore } from '../store/authStore'
@@ -14,6 +14,15 @@ export default function ChatsPage() {
   const { chats, activeChatId, loadChats } = useChatsStore()
 
   const activeChat = chats.find(c => c.id === activeChatId) ?? null
+
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    if (!activeChatId) setSidebarOpen(true)
+  }, [activeChatId])
+
+  const handleChatOpen = () => setSidebarOpen(false)
+  const handleBackToList = () => setSidebarOpen(true)
 
   useEffect(() => {
     const init = async () => {
@@ -45,12 +54,12 @@ export default function ChatsPage() {
   }
 
   return (
-    <div className={styles.layout}>
-      <ChatList onLogout={handleLogout} />
+    <div className={styles.layout} data-sidebar-open={sidebarOpen}>
+      <ChatList onLogout={handleLogout} onChatOpen={handleChatOpen} />
 
       <main className={styles.main}>
         {activeChat ? (
-          <ChatWindow chat={activeChat} />
+          <ChatWindow chat={activeChat} onBack={handleBackToList} />
         ) : (
           <div className={styles.placeholder}>
             <div className={styles.placeholderInner}>

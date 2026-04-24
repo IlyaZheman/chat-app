@@ -7,9 +7,10 @@ import styles from './ChatWindow.module.css'
 
 interface Props {
   chat: Chat
+  onBack: () => void
 }
 
-export default function ChatWindow({ chat }: Props) {
+export default function ChatWindow({ chat, onBack }: Props) {
   const auth = useAuthStore(s => s.auth)
   const { messages, sendMessage } = useChatsStore()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -36,6 +37,7 @@ export default function ChatWindow({ chat }: Props) {
     <div className={styles.window}>
       {/* Chat header */}
       <div className={styles.header}>
+        <button className={styles.backBtn} onClick={onBack} aria-label="Назад">←</button>
         <div className={styles.chatInfo}>
           <span className={styles.chatIcon}>
             {chat.type === 'Group' ? '⬡' : '◎'}
