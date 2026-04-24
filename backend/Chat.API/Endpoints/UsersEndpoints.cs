@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Users;
+using Chat.Application.Admin;
 using Chat.Application.Auth.Login;
 using Chat.Application.Auth.Register;
 
@@ -12,6 +13,7 @@ public static class UsersEndpoints
         builder.MapPost("register", Register);
         builder.MapPost("login", Login);
         builder.MapGet("me", Me).RequireAuthorization();
+        builder.MapGet("users", GetUsers).RequireAuthorization();
 
         return builder;
     }
@@ -43,5 +45,18 @@ public static class UsersEndpoints
         var role = user.FindFirstValue("role") ?? "User";
 
         return Results.Ok(new { userId, userName, role });
+    }
+
+    private static async Task<IResult> GetUsers(
+        ClaimsPrincipal user,
+        GetAllUsersHandler handler,
+        CancellationToken ct)
+    {
+        var currentUserId = Guid.Parse(user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException());
+        var users = await handler.HandleAsync(ct);
+        var response = users
+            .Where(u => u.Id != currentUserId)
+            .Select(u => new UserResponse(u.Id, u.UserName));
+        return Results.Ok(response);
     }
 }

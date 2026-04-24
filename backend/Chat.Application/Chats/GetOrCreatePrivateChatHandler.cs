@@ -1,8 +1,9 @@
+using Chat.Application.Interfaces;
 using Chat.Domain.Interfaces;
 
 namespace Chat.Application.Chats;
 
-public class GetOrCreatePrivateChatHandler(IChatsRepository chatsRepository)
+public class GetOrCreatePrivateChatHandler(IChatsRepository chatsRepository, IChatNotifier notifier)
 {
     public async Task<Guid> HandleAsync(Guid currentUserId, Guid targetUserId, CancellationToken ct = default)
     {
@@ -14,6 +15,8 @@ public class GetOrCreatePrivateChatHandler(IChatsRepository chatsRepository)
 
         await chatsRepository.AddAsync(chat, ct);
         await chatsRepository.SaveChangesAsync(ct);
+
+        await notifier.NotifyNewPrivateChatAsync(targetUserId, ct);
 
         return chat.Id;
     }

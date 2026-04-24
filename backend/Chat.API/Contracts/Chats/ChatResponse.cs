@@ -5,5 +5,6 @@ public record ChatResponse(
     string Type,
     string? Name,
     DateTime CreatedAt,
-    string MyRole
+    string MyRole,
+    string? OtherUserName
 );

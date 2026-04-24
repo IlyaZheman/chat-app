@@ -26,6 +26,10 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
   initSignalR: () => {
     if (chatHub.handlers.size > 0) return
 
+    chatHub.onNewChat(() => {
+      get().loadChats()
+    })
+
     chatHub.onReceiveMessage((senderName, text) => {
       const chatId = get().activeChatId
       if (!chatId) return

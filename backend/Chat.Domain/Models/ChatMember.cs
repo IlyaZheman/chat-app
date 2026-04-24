@@ -8,6 +8,7 @@ public class ChatMember
     public Guid UserId { get; private set; }
     public DateTime JoinedAt { get; private set; }
     public ChatMemberRole Role { get; private set; }
+    public string? UserName { get; private set; }
 
     private ChatMember()
     {
@@ -24,6 +25,6 @@ public class ChatMember
         };
     }
 
-    public static ChatMember Restore(Guid chatId, Guid userId, DateTime joinedAt, ChatMemberRole role) =>
-        new() { ChatId = chatId, UserId = userId, JoinedAt = joinedAt, Role = role };
+    public static ChatMember Restore(Guid chatId, Guid userId, DateTime joinedAt, ChatMemberRole role, string? userName = null) =>
+        new() { ChatId = chatId, UserId = userId, JoinedAt = joinedAt, Role = role, UserName = userName };
 }

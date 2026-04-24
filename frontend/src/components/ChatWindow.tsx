@@ -22,7 +22,7 @@ export default function ChatWindow({ chat }: Props) {
 
   const getChatTitle = () => {
     if (chat.type === 'Group') return chat.name ?? 'Группа'
-    return 'Личное сообщение'
+    return chat.otherUserName ?? 'Личное сообщение'
   }
 
   const formatTime = (iso: string) => {

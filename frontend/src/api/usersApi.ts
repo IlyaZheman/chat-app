@@ -1,5 +1,5 @@
 import api from './client'
-import type { AuthState } from '../types'
+import type { AuthState, User } from '../types'
 
 export const usersApi = {
   register: (userName: string, email: string, password: string) =>
@@ -9,4 +9,6 @@ export const usersApi = {
     api.post('/login', { email, password }),
 
   me: () => api.get<AuthState>('/me').then(r => r.data),
+
+  getUsers: () => api.get<User[]>('/users').then(r => r.data),
 }
