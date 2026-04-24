@@ -351,3 +351,34 @@
   inset: 0;
   z-index: 9;
 }
+
+/* ── Browse groups view ── */
+
+.groupBrowseItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-family: var(--font-ui);
+  box-sizing: border-box;
+}
+
+.joinBtn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.joinBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.joinBtn:hover:not(:disabled) { opacity: 0.85; }

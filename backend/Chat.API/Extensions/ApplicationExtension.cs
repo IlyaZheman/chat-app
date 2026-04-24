@@ -23,6 +23,8 @@ public static class ApplicationExtension
         services.AddScoped<LeaveGroupChatHandler>();
         services.AddScoped<DeleteGroupChatHandler>();
         services.AddScoped<RemoveMemberFromGroupChatHandler>();
+        services.AddScoped<GetAllGroupsHandler>();
+        services.AddScoped<JoinGroupChatHandler>();
 
         services.AddScoped<GetAllUsersHandler>();
         services.AddScoped<AssignUserRoleHandler>();

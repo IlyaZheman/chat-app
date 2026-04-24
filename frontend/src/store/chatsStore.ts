@@ -5,20 +5,24 @@ import { chatHub } from '../hub/chatHub'
 
 interface ChatsStore {
   chats: Chat[]
+  availableGroups: Chat[]
   activeChatId: string | null
   messages: Record<string, Message[]>
   loading: boolean
 
   loadChats: () => Promise<void>
+  loadAllGroups: () => Promise<void>
   selectChat: (chatId: string) => Promise<void>
   sendMessage: (text: string) => Promise<void>
   createGroup: (name: string) => Promise<string>
   openPrivateChat: (targetUserId: string) => Promise<string>
+  joinGroup: (chatId: string) => Promise<void>
   initSignalR: () => void
 }
 
 export const useChatsStore = create<ChatsStore>((set, get) => ({
   chats: [],
+  availableGroups: [],
   activeChatId: null,
   messages: {},
   loading: false,
@@ -130,5 +134,15 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     const { chatId } = await chatsApi.getOrCreatePrivateChat(targetUserId)
     await get().loadChats()
     return chatId
+  },
+
+  loadAllGroups: async () => {
+    const groups = await chatsApi.getAllGroups()
+    set({ availableGroups: groups })
+  },
+
+  joinGroup: async (chatId) => {
+    await chatsApi.joinGroup(chatId)
+    await get().loadChats()
   },
 }))

@@ -9,6 +9,7 @@ public interface IChatsRepository
     Task<Models.Chat?> GetByIdAsync(Guid chatId, CancellationToken ct = default);
     Task<Models.Chat?> GetPrivateChatAsync(Guid firstUserId, Guid secondUserId, CancellationToken ct = default);
     Task<IReadOnlyList<Models.Chat>> GetUserChatsAsync(Guid userId, CancellationToken ct = default);
+    Task<IReadOnlyList<Models.Chat>> GetAllGroupChatsAsync(CancellationToken ct = default);
 
     Task<bool> ExistsAsync(Guid chatId, CancellationToken ct = default);
     Task<bool> IsMemberAsync(Guid chatId, Guid userId, CancellationToken ct = default);

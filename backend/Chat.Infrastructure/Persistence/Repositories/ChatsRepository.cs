@@ -41,6 +41,19 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
         return entity is null ? null : MapToDomain(entity);
     }
 
+    public async Task<IReadOnlyList<Domain.Models.Chat>> GetAllGroupChatsAsync(CancellationToken ct = default)
+    {
+        var entities = await context.Chats
+            .Include(c => c.Members)
+            .ThenInclude(m => m.User)
+            .AsNoTracking()
+            .Where(c => c.Type == ChatType.Group)
+            .OrderBy(c => c.Name)
+            .ToListAsync(ct);
+
+        return entities.Select(MapToDomain).ToList();
+    }
+
     public async Task<IReadOnlyList<Domain.Models.Chat>> GetUserChatsAsync(
         Guid userId,
         CancellationToken ct = default)
