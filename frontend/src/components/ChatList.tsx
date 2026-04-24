@@ -9,12 +9,14 @@ interface Props {
   onLogout: () => void
 }
 
+type View = 'list' | 'newGroup' | 'newPrivate'
+
 export default function ChatList({ onLogout }: Props) {
   const auth = useAuthStore(s => s.auth)
   const { chats, activeChatId, selectChat, createGroup, openPrivateChat } = useChatsStore()
 
-  const [showNewGroup, setShowNewGroup] = useState(false)
-  const [showNewPrivate, setShowNewPrivate] = useState(false)
+  const [showMenu, setShowMenu] = useState(false)
+  const [view, setView] = useState<View>('list')
   const [groupName, setGroupName] = useState('')
   const [userSearch, setUserSearch] = useState('')
   const [users, setUsers] = useState<User[]>([])
@@ -26,29 +28,31 @@ export default function ChatList({ onLogout }: Props) {
     setSubmitting(true)
     const chatId = await createGroup(groupName.trim())
     setGroupName('')
-    setShowNewGroup(false)
+    setView('list')
     setSubmitting(false)
     await selectChat(chatId)
   }
 
-  const handleShowPrivate = async () => {
-    const next = !showNewPrivate
-    setShowNewPrivate(next)
-    setShowNewGroup(false)
+  const handleOpenPrivate = async () => {
     setUserSearch('')
-    if (next) {
-      const list = await usersApi.getUsers()
-      setUsers(list)
-    }
+    setView('newPrivate')
+    const list = await usersApi.getUsers()
+    setUsers(list)
   }
 
   const handleSelectUser = async (user: User) => {
     setSubmitting(true)
     const chatId = await openPrivateChat(user.id)
-    setShowNewPrivate(false)
+    setView('list')
     setUserSearch('')
     setSubmitting(false)
     await selectChat(chatId)
+  }
+
+  const goBack = () => {
+    setView('list')
+    setGroupName('')
+    setUserSearch('')
   }
 
   const getChatLabel = (chat: Chat) => {
@@ -63,9 +67,67 @@ export default function ChatList({ onLogout }: Props) {
     u.userName.toLowerCase().includes(userSearch.toLowerCase())
   )
 
+  if (view === 'newGroup') {
+    return (
+      <aside className={styles.sidebar}>
+        <div className={styles.subHeader}>
+          <button className={styles.backBtn} onClick={goBack} title="Назад">←</button>
+          <span className={styles.subTitle}>Новая группа</span>
+        </div>
+        <form className={styles.groupForm} onSubmit={handleGroupCreate}>
+          <input
+            className={styles.groupInput}
+            placeholder="Название группы"
+            value={groupName}
+            onChange={e => setGroupName(e.target.value)}
+            autoFocus
+          />
+          <button className={styles.groupSubmit} disabled={submitting || !groupName.trim()}>
+            {submitting ? '...' : 'Создать группу'}
+          </button>
+        </form>
+      </aside>
+    )
+  }
+
+  if (view === 'newPrivate') {
+    return (
+      <aside className={styles.sidebar}>
+        <div className={styles.subHeader}>
+          <button className={styles.backBtn} onClick={goBack} title="Назад">←</button>
+          <span className={styles.subTitle}>Новое сообщение</span>
+        </div>
+        <div className={styles.searchWrap}>
+          <input
+            className={styles.searchInput}
+            placeholder="Поиск пользователя…"
+            value={userSearch}
+            onChange={e => setUserSearch(e.target.value)}
+            autoFocus
+          />
+        </div>
+        <nav className={styles.list}>
+          {filteredUsers.length === 0 && (
+            <p className={styles.empty}>Нет пользователей</p>
+          )}
+          {filteredUsers.map(u => (
+            <button
+              key={u.id}
+              className={styles.userItem}
+              disabled={submitting}
+              onClick={() => handleSelectUser(u)}
+            >
+              <span className={styles.chatIcon}>◎</span>
+              <span className={styles.chatLabel}>{u.userName}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+    )
+  }
+
   return (
     <aside className={styles.sidebar}>
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.brand}>
           <span className={styles.brandIcon}>◈</span>
@@ -77,67 +139,6 @@ export default function ChatList({ onLogout }: Props) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className={styles.actions}>
-        <button
-          className={styles.actionBtn}
-          onClick={() => { setShowNewGroup(g => !g); setShowNewPrivate(false) }}
-        >
-          <span>+</span> Группа
-        </button>
-        <button
-          className={styles.actionBtn}
-          onClick={handleShowPrivate}
-        >
-          <span>+</span> Личное
-        </button>
-      </div>
-
-      {/* New group form */}
-      {showNewGroup && (
-        <form className={styles.newChatForm} onSubmit={handleGroupCreate}>
-          <input
-            className={styles.newChatInput}
-            placeholder="Название группы"
-            value={groupName}
-            onChange={e => setGroupName(e.target.value)}
-            autoFocus
-          />
-          <button className={styles.newChatSubmit} disabled={submitting}>
-            {submitting ? '...' : 'Создать'}
-          </button>
-        </form>
-      )}
-
-      {/* User picker for private chat */}
-      {showNewPrivate && (
-        <div className={styles.userPicker}>
-          <input
-            className={styles.newChatInput}
-            placeholder="Поиск пользователя…"
-            value={userSearch}
-            onChange={e => setUserSearch(e.target.value)}
-            autoFocus
-          />
-          <div className={styles.userList}>
-            {filteredUsers.length === 0 && (
-              <p className={styles.empty}>Нет пользователей</p>
-            )}
-            {filteredUsers.map(u => (
-              <button
-                key={u.id}
-                className={styles.userItem}
-                disabled={submitting}
-                onClick={() => handleSelectUser(u)}
-              >
-                {u.userName}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Chat list */}
       <nav className={styles.list}>
         {chats.length === 0 && (
           <p className={styles.empty}>Нет чатов. Создайте первый!</p>
@@ -156,6 +157,35 @@ export default function ChatList({ onLogout }: Props) {
           </button>
         ))}
       </nav>
+
+      {showMenu && (
+        <div className={styles.backdrop} onClick={() => setShowMenu(false)} />
+      )}
+
+      {showMenu && (
+        <div className={styles.fabMenu}>
+          <button
+            className={styles.fabMenuItem}
+            onClick={() => { setShowMenu(false); setGroupName(''); setView('newGroup') }}
+          >
+            <span>⬡</span> Группа
+          </button>
+          <button
+            className={styles.fabMenuItem}
+            onClick={() => { setShowMenu(false); handleOpenPrivate() }}
+          >
+            <span>◎</span> Личное
+          </button>
+        </div>
+      )}
+
+      <button
+        className={`${styles.fab} ${showMenu ? styles.fabOpen : ''}`}
+        onClick={() => setShowMenu(v => !v)}
+        title="Создать чат"
+      >
+        +
+      </button>
     </aside>
   )
 }
