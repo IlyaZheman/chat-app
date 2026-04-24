@@ -12,8 +12,10 @@ public static class ChatsEndpoints
         var chats = builder.MapGroup("chats").RequireAuthorization();
 
         chats.MapGet(string.Empty, GetUserChats);
+        chats.MapGet("groups", GetAllGroups);
         chats.MapPost("group", CreateGroupChat);
         chats.MapPost("private", GetOrCreatePrivateChat);
+        chats.MapPost("{chatId:guid}/join", JoinGroup);
         chats.MapGet("{chatId:guid}/messages", GetMessages);
         chats.MapPost("{chatId:guid}/members", AddMember);
         chats.MapDelete("{chatId:guid}", DeleteChat);
@@ -113,6 +115,29 @@ public static class ChatsEndpoints
     {
         var requesterId = GetUserId(user);
         await handler.HandleAsync(chatId, requesterId, userId, ct);
+        return Results.Ok();
+    }
+
+    private static async Task<IResult> GetAllGroups(
+        GetAllGroupsHandler handler,
+        CancellationToken ct)
+    {
+        var groups = await handler.HandleAsync(ct);
+
+        var response = groups.Select(c =>
+            new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, null, null));
+
+        return Results.Ok(response);
+    }
+
+    private static async Task<IResult> JoinGroup(
+        Guid chatId,
+        ClaimsPrincipal user,
+        JoinGroupChatHandler handler,
+        CancellationToken ct)
+    {
+        var userId = GetUserId(user);
+        await handler.HandleAsync(chatId, userId, ct);
         return Results.Ok();
     }
 

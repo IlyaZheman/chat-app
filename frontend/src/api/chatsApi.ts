@@ -13,4 +13,10 @@ export const chatsApi = {
 
   getOrCreatePrivateChat: (targetUserId: string) =>
     api.post<{ chatId: string }>('/chats/private', { targetUserId }).then(r => r.data),
+
+  getAllGroups: () =>
+    api.get<Chat[]>('/chats/groups').then(r => r.data),
+
+  joinGroup: (chatId: string) =>
+    api.post(`/chats/${chatId}/join`).then(r => r.data),
 }

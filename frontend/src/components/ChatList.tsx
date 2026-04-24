@@ -9,11 +9,11 @@ interface Props {
   onLogout: () => void
 }
 
-type View = 'list' | 'newGroup' | 'newPrivate'
+type View = 'list' | 'newGroup' | 'newPrivate' | 'browseGroups'
 
 export default function ChatList({ onLogout }: Props) {
   const auth = useAuthStore(s => s.auth)
-  const { chats, activeChatId, selectChat, createGroup, openPrivateChat } = useChatsStore()
+  const { chats, availableGroups, activeChatId, selectChat, createGroup, openPrivateChat, loadAllGroups, joinGroup } = useChatsStore()
 
   const [showMenu, setShowMenu] = useState(false)
   const [view, setView] = useState<View>('list')
@@ -38,6 +38,20 @@ export default function ChatList({ onLogout }: Props) {
     setView('newPrivate')
     const list = await usersApi.getUsers()
     setUsers(list)
+  }
+
+  const handleOpenBrowseGroups = async () => {
+    setUserSearch('')
+    setView('browseGroups')
+    await loadAllGroups()
+  }
+
+  const handleJoinGroup = async (chatId: string) => {
+    setSubmitting(true)
+    await joinGroup(chatId)
+    setView('list')
+    setSubmitting(false)
+    await selectChat(chatId)
   }
 
   const handleSelectUser = async (user: User) => {
@@ -86,6 +100,56 @@ export default function ChatList({ onLogout }: Props) {
             {submitting ? '...' : 'Создать группу'}
           </button>
         </form>
+      </aside>
+    )
+  }
+
+  if (view === 'browseGroups') {
+    const joinedIds = new Set(chats.map(c => c.id))
+    const filtered = availableGroups.filter(g =>
+      g.name?.toLowerCase().includes(userSearch.toLowerCase())
+    )
+    return (
+      <aside className={styles.sidebar}>
+        <div className={styles.subHeader}>
+          <button className={styles.backBtn} onClick={goBack} title="Назад">←</button>
+          <span className={styles.subTitle}>Найти группу</span>
+        </div>
+        <div className={styles.searchWrap}>
+          <input
+            className={styles.searchInput}
+            placeholder="Поиск группы…"
+            value={userSearch}
+            onChange={e => setUserSearch(e.target.value)}
+            autoFocus
+          />
+        </div>
+        <nav className={styles.list}>
+          {filtered.length === 0 && (
+            <p className={styles.empty}>Нет групп</p>
+          )}
+          {filtered.map(g => {
+            const already = joinedIds.has(g.id)
+            return (
+              <div key={g.id} className={styles.groupBrowseItem}>
+                <span className={styles.chatIcon}>⬡</span>
+                <span className={styles.chatLabel}>{g.name ?? 'Группа'}</span>
+                {already
+                  ? <span className={styles.chatBadge}>Вступил</span>
+                  : (
+                    <button
+                      className={styles.joinBtn}
+                      disabled={submitting}
+                      onClick={() => handleJoinGroup(g.id)}
+                    >
+                      Вступить
+                    </button>
+                  )
+                }
+              </div>
+            )
+          })}
+        </nav>
       </aside>
     )
   }
@@ -175,6 +239,12 @@ export default function ChatList({ onLogout }: Props) {
             onClick={() => { setShowMenu(false); handleOpenPrivate() }}
           >
             <span>◎</span> Личное
+          </button>
+          <button
+            className={styles.fabMenuItem}
+            onClick={() => { setShowMenu(false); handleOpenBrowseGroups() }}
+          >
+            <span>⬡</span> Найти группу
           </button>
         </div>
       )}
