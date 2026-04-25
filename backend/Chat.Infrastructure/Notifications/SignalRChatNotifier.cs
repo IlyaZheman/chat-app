@@ -1,4 +1,5 @@
 using Chat.Application.Interfaces;
+using Chat.Domain.Models;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chat.Infrastructure.Notifications;
@@ -6,25 +7,25 @@ namespace Chat.Infrastructure.Notifications;
 public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext) : IChatNotifier
     where THub : Hub<IChatClient>
 {
-    public async Task NotifyMessageAsync(Guid chatId, string senderName, string text, CancellationToken ct = default)
+    public async Task NotifyMessageAsync(Guid chatId, string senderName, MessagePayload payload, CancellationToken ct = default)
     {
         await hubContext.Clients
             .Group(chatId.ToString())
-            .ReceiveMessage(senderName, text);
+            .ReceiveMessage(senderName, ToDto(payload));
     }
 
     public async Task NotifyUserJoinedAsync(Guid chatId, string userName, CancellationToken ct = default)
     {
         await hubContext.Clients
             .Group(chatId.ToString())
-            .ReceiveMessage("System", $"{userName} присоединился к чату");
+            .ReceiveMessage("System", new TextPayloadDto($"{userName} присоединился к чату"));
     }
 
     public async Task NotifyUserLeftAsync(Guid chatId, string userName, CancellationToken ct = default)
     {
         await hubContext.Clients
             .Group(chatId.ToString())
-            .ReceiveMessage("System", $"{userName} покинул чат");
+            .ReceiveMessage("System", new TextPayloadDto($"{userName} покинул чат"));
     }
 
     public async Task NotifyChatDeletedAsync(Guid chatId, CancellationToken ct = default)
@@ -40,4 +41,12 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
             .Group($"user-{targetUserId}")
             .NewChatCreated();
     }
+
+    private static MessagePayloadDto ToDto(MessagePayload payload) => payload switch
+    {
+        TextPayload t  => new TextPayloadDto(t.Text),
+        ImagePayload i => new ImagePayloadDto(i.Url, i.FileName, i.Caption, i.CaptionPosition.ToString().ToLower()),
+        FilePayload f  => new FilePayloadDto(f.Url, f.FileName, f.MediaType),
+        _              => throw new NotSupportedException(payload.GetType().Name)
+    };
 }

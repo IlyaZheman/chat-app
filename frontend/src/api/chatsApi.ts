@@ -6,7 +6,9 @@ export const chatsApi = {
     api.get<Chat[]>('/chats').then(r => r.data),
 
   getMessages: (chatId: string) =>
-    api.get<Message[]>(`/chats/${chatId}/messages`).then(r => r.data),
+    api.get<Message[]>(`/chats/${chatId}/messages`).then(r =>
+      r.data.map(m => ({ ...m, payload: m.payload ?? { type: 'text' as const, text: '' } }))
+    ),
 
   createGroupChat: (name: string) =>
     api.post<{ chatId: string }>('/chats/group', { name }).then(r => r.data),

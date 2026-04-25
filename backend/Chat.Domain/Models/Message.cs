@@ -6,35 +6,28 @@ public class Message
     public Guid ChatId { get; private set; }
     public Guid SenderId { get; private set; }
     public string SenderName { get; private set; } = string.Empty;
-    public string Text { get; private set; } = string.Empty;
+    public MessagePayload Payload { get; private set; } = null!;
     public DateTime SentAt { get; private set; }
 
-    private Message()
-    {
-    }
+    private Message() { }
 
-    public static Message Create(Guid chatId, Guid senderId, string senderName, string text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-            throw new ArgumentException("Message text cannot be empty.");
-
-        return new Message
+    public static Message Create(Guid chatId, Guid senderId, string senderName, MessagePayload payload) =>
+        new()
         {
             Id = Guid.NewGuid(),
             ChatId = chatId,
             SenderId = senderId,
             SenderName = senderName,
-            Text = text,
+            Payload = payload,
             SentAt = DateTime.UtcNow
         };
-    }
 
     public static Message Restore(
         Guid id,
         Guid chatId,
         Guid senderId,
         string senderName,
-        string text,
+        MessagePayload payload,
         DateTime sentAt) =>
-        new() { Id = id, ChatId = chatId, SenderId = senderId, SenderName = senderName, Text = text, SentAt = sentAt };
+        new() { Id = id, ChatId = chatId, SenderId = senderId, SenderName = senderName, Payload = payload, SentAt = sentAt };
 }

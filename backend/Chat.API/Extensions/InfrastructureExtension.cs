@@ -8,6 +8,7 @@ using Chat.Infrastructure.Persistence;
 using Chat.Infrastructure.Persistence.Repositories;
 using Chat.Infrastructure.Security;
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chat.API.Extensions;
@@ -48,6 +49,9 @@ public static class InfrastructureExtension
 
         services.AddScoped<IChatNotifier, SignalRChatNotifier<ChatHub>>();
 
+        services.Configure<FormOptions>(o =>
+            o.MultipartBodyLengthLimit = 10 * 1024 * 1024 + 4096);
+
         return services;
     }
 
@@ -55,6 +59,7 @@ public static class InfrastructureExtension
     {
         app.UseMiddleware<ExceptionMiddleware>();
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
         app.UseCors();
         app.UseCookiePolicy(new CookiePolicyOptions
         {

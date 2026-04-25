@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useChatsStore } from '../store/chatsStore'
 import { useAuthStore } from '../store/authStore'
 import MessageInput from './MessageInput'
-import type { Chat } from '../types'
+import type { Chat, MessagePayload } from '../types'
 import styles from './ChatWindow.module.css'
 
 interface Props {
@@ -26,11 +26,43 @@ export default function ChatWindow({ chat, onBack }: Props) {
     return chat.otherUserName ?? 'Личное сообщение'
   }
 
-  const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString('ru', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
+
+  const renderPayload = (payload: MessagePayload) => {
+    switch (payload.type) {
+      case 'text':
+        return <span className={styles.bubbleText}>{payload.text}</span>
+      case 'image':
+        return (
+          <>
+            {payload.captionPosition === 'above' && payload.caption && (
+              <span className={styles.bubbleText}>{payload.caption}</span>
+            )}
+            <img
+              src={payload.url}
+              alt={payload.fileName}
+              className={styles.attachmentImage}
+              loading="lazy"
+            />
+            {payload.captionPosition !== 'above' && payload.caption && (
+              <span className={styles.bubbleCaption}>{payload.caption}</span>
+            )}
+          </>
+        )
+      case 'file':
+        return (
+          <a
+            href={payload.url}
+            download={payload.fileName}
+            target="_blank"
+            rel="noreferrer"
+            className={styles.attachmentFile}
+          >
+            📎 {payload.fileName}
+          </a>
+        )
+    }
   }
 
   return (
@@ -72,7 +104,7 @@ export default function ChatWindow({ chat, onBack }: Props) {
           if (isSystem) {
             return (
               <div key={msg.id} className={styles.systemMsg}>
-                {msg.text}
+                {msg.payload.type === 'text' ? msg.payload.text : ''}
               </div>
             )
           }
@@ -86,7 +118,7 @@ export default function ChatWindow({ chat, onBack }: Props) {
                 <span className={styles.senderName}>{msg.senderName}</span>
               )}
               <div className={styles.bubble}>
-                <span className={styles.bubbleText}>{msg.text}</span>
+                {renderPayload(msg.payload)}
                 <span className={styles.bubbleTime}>{formatTime(msg.sentAt)}</span>
               </div>
             </div>

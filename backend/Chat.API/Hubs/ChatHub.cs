@@ -5,6 +5,16 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Chat.API.Hubs;
 
+public record SendMessageRequest(
+    string? Text,
+    string? Url = null,
+    string? FileName = null,
+    string? MediaType = null,
+    string? Caption = null,
+    string CaptionPosition = "below"
+);
+
+
 [Authorize]
 public class ChatHub(
     JoinChatHandler joinChatHandler,
@@ -38,9 +48,12 @@ public class ChatHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
     }
 
-    public async Task SendMessage(string text)
+    public async Task SendMessage(SendMessageRequest request)
     {
-        await sendMessageHandler.HandleAsync(Context.ConnectionId, text);
+        var command = new SendMessageCommand(
+            request.Text, request.Url, request.FileName,
+            request.MediaType, request.Caption, request.CaptionPosition);
+        await sendMessageHandler.HandleAsync(Context.ConnectionId, command);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
