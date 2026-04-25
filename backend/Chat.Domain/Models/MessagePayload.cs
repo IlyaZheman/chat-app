@@ -6,7 +6,7 @@ namespace Chat.Domain.Models;
 [JsonDerivedType(typeof(TextPayload), "text")]
 [JsonDerivedType(typeof(ImagePayload), "image")]
 [JsonDerivedType(typeof(FilePayload), "file")]
-public abstract class MessagePayload { }
+public abstract class MessagePayload;
 
 public class TextPayload : MessagePayload
 {

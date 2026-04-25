@@ -104,7 +104,7 @@ export default function MessageInput({ onSend, disabled }: Props) {
         />
         <textarea
           className={styles.input}
-          placeholder={pendingFile ? 'Подпись (необязательно)…' : 'Напишите сообщение… (Enter — отправить)'}
+          placeholder={pendingFile ? 'Подпись (необязательно)…' : 'Сообщение'}
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}

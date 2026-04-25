@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Chat.Infrastructure.Persistence.Migrations
+namespace Chat.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -74,6 +74,10 @@ namespace Chat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChatId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("json");
+
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid");
 
@@ -83,10 +87,6 @@ namespace Chat.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
