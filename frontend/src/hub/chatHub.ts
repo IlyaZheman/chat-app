@@ -1,6 +1,16 @@
 import * as signalR from '@microsoft/signalr'
+import type { MessagePayload } from '../types'
 
-type MessageHandler = (userName: string, text: string) => void
+export interface SendMessageRequest {
+  text?: string | null
+  url?: string | null
+  fileName?: string | null
+  mediaType?: string | null
+  caption?: string | null
+  captionPosition?: string
+}
+
+type MessageHandler = (userName: string, payload: MessagePayload) => void
 type VoidHandler = () => void
 
 class ChatHub {
@@ -19,8 +29,8 @@ class ChatHub {
       .configureLogging(signalR.LogLevel.Information)
       .build()
 
-    this.connection.on('ReceiveMessage', (userName: string, text: string) => {
-      this.handlers.forEach(h => h(userName, text))
+    this.connection.on('ReceiveMessage', (userName: string, payload: MessagePayload) => {
+      this.handlers.forEach(h => h(userName, payload))
     })
 
     this.connection.on('NewChatCreated', () => {
@@ -44,8 +54,8 @@ class ChatHub {
     await this.connection?.invoke('LeaveGroupChat')
   }
 
-  async sendMessage(text: string) {
-    await this.connection?.invoke('SendMessage', text)
+  async sendMessage(request: SendMessageRequest) {
+    await this.connection?.invoke('SendMessage', request)
   }
 
   onReceiveMessage(handler: MessageHandler) {

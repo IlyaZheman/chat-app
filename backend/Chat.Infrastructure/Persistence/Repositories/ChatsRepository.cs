@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Chat.Domain.Enums;
 using Chat.Domain.Interfaces;
 using Chat.Domain.Models;
@@ -8,6 +9,8 @@ namespace Chat.Infrastructure.Persistence.Repositories;
 
 public class ChatsRepository(AppDbContext context) : IChatsRepository
 {
+    private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
+
     public async Task AddAsync(Domain.Models.Chat chat, CancellationToken ct = default)
     {
         var entity = MapToEntity(chat);
@@ -92,7 +95,7 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             ChatId = message.ChatId,
             SenderId = message.SenderId,
             SenderName = message.SenderName,
-            Text = message.Text,
+            Payload = JsonSerializer.Serialize(message.Payload, JsonOpts),
             SentAt = message.SentAt
         };
 
@@ -113,7 +116,11 @@ public class ChatsRepository(AppDbContext context) : IChatsRepository
             .ToListAsync(ct);
 
         return entities
-            .Select(e => Message.Restore(e.Id, e.ChatId, e.SenderId, e.SenderName, e.Text, e.SentAt))
+            .Select(e =>
+            {
+                var payload = JsonSerializer.Deserialize<MessagePayload>(e.Payload, JsonOpts)!;
+                return Message.Restore(e.Id, e.ChatId, e.SenderId, e.SenderName, payload, e.SentAt);
+            })
             .ToList();
     }
 

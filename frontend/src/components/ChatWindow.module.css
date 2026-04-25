@@ -194,3 +194,31 @@
     max-width: 88%;
   }
 }
+
+.attachmentImage {
+  display: block;
+  max-width: 280px;
+  max-height: 280px;
+  border-radius: 10px;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
+.bubbleCaption {
+  display: block;
+  font-size: 13px;
+  margin-top: 4px;
+  color: inherit;
+  opacity: 0.85;
+}
+
+.attachmentFile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}

@@ -34,7 +34,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<MessageEntity>(b =>
         {
             b.HasKey(m => m.Id);
-            b.Property(m => m.Text).IsRequired();
+            b.Property(m => m.Payload).HasColumnType("jsonb").IsRequired();
             b.Property(m => m.SentAt).IsRequired();
 
             b.HasOne(m => m.Chat)

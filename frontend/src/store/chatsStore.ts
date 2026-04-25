@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import type { Chat, Message } from '../types'
+import type { Chat, Message, MessagePayload } from '../types'
 import { chatsApi } from '../api/chatsApi'
-import { chatHub } from '../hub/chatHub'
+import { chatHub, type SendMessageRequest } from '../hub/chatHub'
 
 interface ChatsStore {
   chats: Chat[]
@@ -13,7 +13,7 @@ interface ChatsStore {
   loadChats: () => Promise<void>
   loadAllGroups: () => Promise<void>
   selectChat: (chatId: string) => Promise<void>
-  sendMessage: (text: string) => Promise<void>
+  sendMessage: (payload: MessagePayload) => Promise<void>
   createGroup: (name: string) => Promise<string>
   openPrivateChat: (targetUserId: string) => Promise<string>
   joinGroup: (chatId: string) => Promise<void>
@@ -34,16 +34,16 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       get().loadChats()
     })
 
-    chatHub.onReceiveMessage((senderName, text) => {
+    chatHub.onReceiveMessage((senderName, payload) => {
       const chatId = get().activeChatId
       if (!chatId) return
 
       const existing = get().messages[chatId] ?? []
-
       const now = Date.now()
+
       const isDuplicate = existing.some(m =>
-        m.text === text &&
         m.senderName === senderName &&
+        payloadsMatch(m.payload, payload) &&
         now - new Date(m.sentAt).getTime() < 2000 &&
         m.id.startsWith('optimistic-')
       )
@@ -53,7 +53,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
           messages: {
             ...s.messages,
             [chatId]: (s.messages[chatId] ?? []).map(m =>
-              m.id.startsWith('optimistic-') && m.text === text && m.senderName === senderName
+              m.id.startsWith('optimistic-') && m.senderName === senderName && payloadsMatch(m.payload, payload)
                 ? { ...m, id: crypto.randomUUID() }
                 : m
             ),
@@ -64,8 +64,8 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
 
       const msg: Message = {
         id: crypto.randomUUID(),
-        senderName: senderName,
-        text,
+        senderName,
+        payload,
         sentAt: new Date().toISOString(),
       }
 
@@ -93,7 +93,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     await chatHub.joinChat(chatId)
   },
 
-  sendMessage: async (text) => {
+  sendMessage: async (payload) => {
     const chatId = get().activeChatId
     const auth = await import('../store/authStore').then(m => m.useAuthStore.getState().auth)
     if (!chatId || !auth) return
@@ -101,7 +101,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     const optimisticMsg: Message = {
       id: `optimistic-${crypto.randomUUID()}`,
       senderName: auth.userName,
-      text,
+      payload,
       sentAt: new Date().toISOString(),
     }
 
@@ -113,7 +113,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     }))
 
     try {
-      await chatHub.sendMessage(text)
+      await chatHub.sendMessage(payloadToRequest(payload))
     } catch {
       set(s => ({
         messages: {
@@ -146,3 +146,22 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     await get().loadChats()
   },
 }))
+
+function payloadToRequest(payload: MessagePayload): SendMessageRequest {
+  switch (payload.type) {
+    case 'text':
+      return { text: payload.text }
+    case 'image':
+      return { url: payload.url, fileName: payload.fileName, mediaType: 'image/jpeg', caption: payload.caption, captionPosition: payload.captionPosition }
+    case 'file':
+      return { url: payload.url, fileName: payload.fileName, mediaType: payload.mediaType }
+  }
+}
+
+function payloadsMatch(a: MessagePayload, b: MessagePayload): boolean {
+  if (a.type !== b.type) return false
+  if (a.type === 'text' && b.type === 'text') return a.text === b.text
+  if (a.type === 'image' && b.type === 'image') return a.url === b.url
+  if (a.type === 'file' && b.type === 'file') return a.url === b.url
+  return false
+}

@@ -1,8 +1,10 @@
+using Chat.Infrastructure.Notifications;
+
 namespace Chat.API.Contracts.Chats;
 
 public record MessageResponse(
     Guid Id,
     string SenderName,
-    string Text,
-    DateTime SentAt
+    DateTime SentAt,
+    MessagePayloadDto Payload
 );

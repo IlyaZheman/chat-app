@@ -12,6 +12,7 @@ public static class EndpointsExtension
         var api = app.MapGroup("api");
         api.MapUsersEndpoints();
         api.MapChatsEndpoints();
+        api.MapUploadsEndpoints();
         api.MapAdminEndpoints();
         api.MapTestEndpoints();
 
