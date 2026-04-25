@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Chat.Infrastructure.Persistence.Migrations
+namespace Chat.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260417222038_AddChatsAndMessages")]
-    partial class AddChatsAndMessages
+    [Migration("20260425135248_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -56,6 +56,11 @@ namespace Chat.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.HasKey("ChatId", "UserId");
 
                     b.HasIndex("UserId");
@@ -72,15 +77,19 @@ namespace Chat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChatId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("json");
+
                     b.Property<Guid>("SenderId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Text")
+                    b.Property<string>("SenderName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -104,6 +113,11 @@ namespace Chat.Infrastructure.Persistence.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Role")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("UserName")
                         .IsRequired()
