@@ -13,6 +13,7 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="16.1.1" />
+        <PackageReference Include="AWSSDK.S3" Version="3.7.414.3" />
         <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />

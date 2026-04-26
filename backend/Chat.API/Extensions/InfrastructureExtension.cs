@@ -1,3 +1,6 @@
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 using Chat.API.Hubs;
 using Chat.API.Middlewares;
 using Chat.Application.Interfaces;
@@ -7,6 +10,7 @@ using Chat.Infrastructure.Notifications;
 using Chat.Infrastructure.Persistence;
 using Chat.Infrastructure.Persistence.Repositories;
 using Chat.Infrastructure.Security;
+using Chat.Infrastructure.Storage;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +56,19 @@ public static class InfrastructureExtension
         services.Configure<FormOptions>(o =>
             o.MultipartBodyLengthLimit = 10 * 1024 * 1024 + 4096);
 
+        var minioOptions = configuration.GetSection("Minio").Get<MinioOptions>()
+            ?? throw new InvalidOperationException("Minio configuration is missing.");
+        services.Configure<MinioOptions>(configuration.GetSection("Minio"));
+        services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
+            new BasicAWSCredentials(minioOptions.AccessKey, minioOptions.SecretKey),
+            new AmazonS3Config
+            {
+                ServiceURL = minioOptions.ServiceUrl,
+                ForcePathStyle = true,
+                AuthenticationRegion = RegionEndpoint.USEast1.SystemName
+            }));
+        services.AddSingleton<IFileStorage, MinioFileStorage>();
+
         return services;
     }
 
@@ -59,7 +76,6 @@ public static class InfrastructureExtension
     {
         app.UseMiddleware<ExceptionMiddleware>();
         app.UseHttpsRedirection();
-        app.UseStaticFiles();
         app.UseCors();
         app.UseCookiePolicy(new CookiePolicyOptions
         {
