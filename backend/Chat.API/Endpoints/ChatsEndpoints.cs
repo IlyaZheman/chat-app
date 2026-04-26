@@ -149,8 +149,8 @@ public static class ChatsEndpoints
     private static MessagePayloadDto ToPayloadDto(MessagePayload payload) => payload switch
     {
         TextPayload t  => new TextPayloadDto(t.Text),
-        ImagePayload i => new ImagePayloadDto(i.Url, i.FileName, i.Caption, i.CaptionPosition.ToString().ToLower()),
-        FilePayload f  => new FilePayloadDto(f.Url, f.FileName, f.MediaType),
+        ImagePayload i => new ImagePayloadDto(i.Url, i.FileName, i.Caption, i.CaptionPosition.ToString().ToLower(), i.FileSize),
+        FilePayload f  => new FilePayloadDto(f.Url, f.FileName, f.MediaType, f.FileSize),
         _              => throw new NotSupportedException(payload.GetType().Name)
     };
 }

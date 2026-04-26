@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useChatsStore } from '../store/chatsStore'
 import { useAuthStore } from '../store/authStore'
 import MessageInput from './MessageInput'
+import ImageLightbox from './ImageLightbox'
+import FileCard from './FileCard'
 import type { Chat, MessagePayload } from '../types'
 import styles from './ChatWindow.module.css'
 
@@ -14,6 +16,7 @@ export default function ChatWindow({ chat, onBack }: Props) {
   const auth = useAuthStore(s => s.auth)
   const { messages, sendMessage } = useChatsStore()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const [lightbox, setLightbox] = useState<{ url: string; fileName: string; fileSize?: number } | null>(null)
 
   const chatMessages = messages[chat.id] ?? []
 
@@ -39,28 +42,49 @@ export default function ChatWindow({ chat, onBack }: Props) {
             {payload.captionPosition === 'above' && payload.caption && (
               <span className={styles.bubbleText}>{payload.caption}</span>
             )}
-            <img
-              src={payload.url}
-              alt={payload.fileName}
-              className={styles.attachmentImage}
-              loading="lazy"
-            />
+            <button
+              className={styles.imageBtn}
+              onClick={() => setLightbox({ url: payload.url, fileName: payload.fileName, fileSize: payload.fileSize })}
+              aria-label="Открыть изображение"
+            >
+              <img
+                src={payload.url}
+                alt={payload.fileName}
+                className={styles.attachmentImage}
+                loading="lazy"
+              />
+            </button>
             {payload.captionPosition !== 'above' && payload.caption && (
               <span className={styles.bubbleCaption}>{payload.caption}</span>
             )}
           </>
         )
       case 'file':
+        if (payload.mediaType.startsWith('video/')) {
+          return (
+            <video
+              src={payload.url}
+              controls
+              className={styles.attachmentVideo}
+            />
+          )
+        }
+        if (payload.mediaType.startsWith('audio/')) {
+          return (
+            <audio
+              src={payload.url}
+              controls
+              className={styles.attachmentAudio}
+            />
+          )
+        }
         return (
-          <a
-            href={payload.url}
-            download={payload.fileName}
-            target="_blank"
-            rel="noreferrer"
-            className={styles.attachmentFile}
-          >
-            📎 {payload.fileName}
-          </a>
+          <FileCard
+            url={payload.url}
+            fileName={payload.fileName}
+            mediaType={payload.mediaType}
+            fileSize={payload.fileSize}
+          />
         )
     }
   }
@@ -129,6 +153,14 @@ export default function ChatWindow({ chat, onBack }: Props) {
 
       {/* Input */}
       <MessageInput onSend={sendMessage} />
+      {lightbox && (
+        <ImageLightbox
+          url={lightbox.url}
+          fileName={lightbox.fileName}
+          fileSize={lightbox.fileSize}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   )
 }

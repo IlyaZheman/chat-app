@@ -4,6 +4,7 @@ export interface UploadResult {
   url: string
   fileName: string
   mediaType: string
+  fileSize: number
 }
 
 export const uploadsApi = {

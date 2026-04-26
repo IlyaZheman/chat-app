@@ -9,7 +9,9 @@ public static class UploadsEndpoints
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg", ".jpeg", ".png", ".gif", ".webp",
-        ".pdf", ".docx", ".txt", ".zip"
+        ".pdf", ".docx", ".txt", ".zip",
+        ".mp4", ".webm", ".mov",
+        ".mp3", ".wav", ".ogg"
     };
 
     public static IEndpointRouteBuilder MapUploadsEndpoints(this IEndpointRouteBuilder builder)
@@ -45,7 +47,8 @@ public static class UploadsEndpoints
         {
             url = $"/uploads/{uniqueName}",
             fileName = file.FileName,
-            mediaType = file.ContentType
+            mediaType = file.ContentType,
+            fileSize = file.Length
         });
     }
 }

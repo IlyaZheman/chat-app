@@ -10,6 +10,6 @@ public abstract record MessagePayloadDto;
 
 public record TextPayloadDto(string Text) : MessagePayloadDto;
 
-public record ImagePayloadDto(string Url, string FileName, string? Caption, string CaptionPosition) : MessagePayloadDto;
+public record ImagePayloadDto(string Url, string FileName, string? Caption, string CaptionPosition, long FileSize = 0) : MessagePayloadDto;
 
-public record FilePayloadDto(string Url, string FileName, string MediaType) : MessagePayloadDto;
+public record FilePayloadDto(string Url, string FileName, string MediaType, long FileSize = 0) : MessagePayloadDto;

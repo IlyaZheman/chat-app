@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:5113',
+      '/uploads': 'http://localhost:5113',
       '/chat': {
         target: 'http://localhost:5113',
         ws: true,

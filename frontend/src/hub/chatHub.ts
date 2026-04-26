@@ -8,6 +8,7 @@ export interface SendMessageRequest {
   mediaType?: string | null
   caption?: string | null
   captionPosition?: string
+  fileSize?: number | null
 }
 
 type MessageHandler = (userName: string, payload: MessagePayload) => void

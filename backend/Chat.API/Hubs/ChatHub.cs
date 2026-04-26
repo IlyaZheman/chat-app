@@ -11,7 +11,8 @@ public record SendMessageRequest(
     string? FileName = null,
     string? MediaType = null,
     string? Caption = null,
-    string CaptionPosition = "below"
+    string CaptionPosition = "below",
+    long? FileSize = null
 );
 
 
@@ -52,7 +53,7 @@ public class ChatHub(
     {
         var command = new SendMessageCommand(
             request.Text, request.Url, request.FileName,
-            request.MediaType, request.Caption, request.CaptionPosition);
+            request.MediaType, request.Caption, request.CaptionPosition, request.FileSize);
         await sendMessageHandler.HandleAsync(Context.ConnectionId, command);
     }
 
