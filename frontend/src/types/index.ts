@@ -13,8 +13,8 @@ export interface User {
 
 export type MessagePayload =
   | { type: 'text'; text: string }
-  | { type: 'image'; url: string; fileName: string; caption?: string; captionPosition?: 'above' | 'below' }
-  | { type: 'file'; url: string; fileName: string; mediaType: string }
+  | { type: 'image'; url: string; fileName: string; mediaType?: string; caption?: string; captionPosition?: 'above' | 'below'; fileSize?: number }
+  | { type: 'file'; url: string; fileName: string; mediaType: string; fileSize?: number }
 
 export interface Message {
   id: string

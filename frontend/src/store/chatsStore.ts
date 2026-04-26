@@ -152,9 +152,9 @@ function payloadToRequest(payload: MessagePayload): SendMessageRequest {
     case 'text':
       return { text: payload.text }
     case 'image':
-      return { url: payload.url, fileName: payload.fileName, mediaType: 'image/jpeg', caption: payload.caption, captionPosition: payload.captionPosition }
+      return { url: payload.url, fileName: payload.fileName, mediaType: payload.mediaType, caption: payload.caption, captionPosition: payload.captionPosition, fileSize: payload.fileSize }
     case 'file':
-      return { url: payload.url, fileName: payload.fileName, mediaType: payload.mediaType }
+      return { url: payload.url, fileName: payload.fileName, mediaType: payload.mediaType, fileSize: payload.fileSize }
   }
 }
 

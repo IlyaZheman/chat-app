@@ -6,5 +6,6 @@ public record SendMessageCommand(
     string? FileName,
     string? MediaType,
     string? Caption = null,
-    string CaptionPosition = "below"
+    string CaptionPosition = "below",
+    long? FileSize = null
 );

@@ -43,8 +43,8 @@ export default function MessageInput({ onSend, disabled }: Props) {
       try {
         const result = await uploadsApi.upload(pendingFile)
         const payload: MessagePayload = isImage(pendingFile)
-          ? { type: 'image', url: result.url, fileName: result.fileName, caption: trimmed || undefined }
-          : { type: 'file', url: result.url, fileName: result.fileName, mediaType: result.mediaType }
+          ? { type: 'image', url: result.url, fileName: result.fileName, mediaType: result.mediaType, fileSize: result.fileSize, caption: trimmed || undefined }
+          : { type: 'file', url: result.url, fileName: result.fileName, mediaType: result.mediaType, fileSize: result.fileSize }
         onSend(payload)
       } catch {
         setFileError('Не удалось загрузить файл')
@@ -98,7 +98,7 @@ export default function MessageInput({ onSend, disabled }: Props) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.txt,.zip"
+          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.txt,.zip,.mp4,.webm,.mov,.mp3,.wav,.ogg"
           className={styles.fileInput}
           onChange={handleFileChange}
         />

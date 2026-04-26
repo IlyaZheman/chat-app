@@ -35,9 +35,9 @@ public class SendMessageHandler(
             {
                 var pos = Enum.TryParse<CaptionPosition>(cmd.CaptionPosition, true, out var p)
                     ? p : CaptionPosition.Below;
-                return new ImagePayload(cmd.Url, cmd.FileName!, cmd.Caption, pos);
+                return new ImagePayload(cmd.Url, cmd.FileName!, cmd.Caption, pos, cmd.FileSize ?? 0);
             }
-            return new FilePayload(cmd.Url, cmd.FileName!, cmd.MediaType!);
+            return new FilePayload(cmd.Url, cmd.FileName!, cmd.MediaType!, cmd.FileSize ?? 0);
         }
 
         if (!string.IsNullOrWhiteSpace(cmd.Text))
