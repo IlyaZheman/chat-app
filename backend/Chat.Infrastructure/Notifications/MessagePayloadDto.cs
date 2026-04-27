@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Chat.Domain.Models;
 
 namespace Chat.Infrastructure.Notifications;
 
@@ -6,7 +7,27 @@ namespace Chat.Infrastructure.Notifications;
 [JsonDerivedType(typeof(TextPayloadDto), "text")]
 [JsonDerivedType(typeof(ImagePayloadDto), "image")]
 [JsonDerivedType(typeof(FilePayloadDto), "file")]
-public abstract record MessagePayloadDto;
+public abstract record MessagePayloadDto
+{
+    public static MessagePayloadDto From(MessagePayload payload) => payload switch
+    {
+        TextPayload t  => new TextPayloadDto(t.Text),
+        ImagePayload i => new ImagePayloadDto(i.Url, i.FileName, i.Caption, i.CaptionPosition.ToString().ToLower(), i.FileSize),
+        FilePayload f  => new FilePayloadDto(f.Url, f.FileName, f.MediaType, f.FileSize),
+        _              => throw new NotSupportedException(payload.GetType().Name)
+    };
+
+    public MessagePayload ToDomain() => this switch
+    {
+        TextPayloadDto t  => new TextPayload(t.Text),
+        ImagePayloadDto i => new ImagePayload(i.Url, i.FileName, i.Caption, ParseCaptionPosition(i.CaptionPosition), i.FileSize),
+        FilePayloadDto f  => new FilePayload(f.Url, f.FileName, f.MediaType, f.FileSize),
+        _                 => throw new NotSupportedException(GetType().Name)
+    };
+
+    private static CaptionPosition ParseCaptionPosition(string value) =>
+        Enum.TryParse<CaptionPosition>(value, ignoreCase: true, out var pos) ? pos : CaptionPosition.Below;
+}
 
 public record TextPayloadDto(string Text) : MessagePayloadDto;
 

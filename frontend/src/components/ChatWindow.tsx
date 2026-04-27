@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useChatsStore } from '../store/chatsStore'
 import { useAuthStore } from '../store/authStore'
 import MessageInput from './MessageInput'
+import MessageContent from './MessageContent'
 import ImageLightbox from './ImageLightbox'
-import FileCard from './FileCard'
-import type { Chat, MessagePayload } from '../types'
+import type { Chat } from '../types'
+import { ChatIcons } from './chatIcons'
 import styles from './ChatWindow.module.css'
 
 interface Props {
@@ -12,11 +13,17 @@ interface Props {
   onBack: () => void
 }
 
+interface LightboxImage {
+  url: string
+  fileName: string
+  fileSize?: number
+}
+
 export default function ChatWindow({ chat, onBack }: Props) {
   const auth = useAuthStore(s => s.auth)
   const { messages, sendMessage } = useChatsStore()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const [lightbox, setLightbox] = useState<{ url: string; fileName: string; fileSize?: number } | null>(null)
+  const [lightbox, setLightbox] = useState<LightboxImage | null>(null)
 
   const chatMessages = messages[chat.id] ?? []
 
@@ -32,71 +39,13 @@ export default function ChatWindow({ chat, onBack }: Props) {
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
 
-  const renderPayload = (payload: MessagePayload) => {
-    switch (payload.type) {
-      case 'text':
-        return <span className={styles.bubbleText}>{payload.text}</span>
-      case 'image':
-        return (
-          <>
-            {payload.captionPosition === 'above' && payload.caption && (
-              <span className={styles.bubbleText}>{payload.caption}</span>
-            )}
-            <button
-              className={styles.imageBtn}
-              onClick={() => setLightbox({ url: payload.url, fileName: payload.fileName, fileSize: payload.fileSize })}
-              aria-label="Открыть изображение"
-            >
-              <img
-                src={payload.url}
-                alt={payload.fileName}
-                className={styles.attachmentImage}
-                loading="lazy"
-              />
-            </button>
-            {payload.captionPosition !== 'above' && payload.caption && (
-              <span className={styles.bubbleCaption}>{payload.caption}</span>
-            )}
-          </>
-        )
-      case 'file':
-        if (payload.mediaType.startsWith('video/')) {
-          return (
-            <video
-              src={payload.url}
-              controls
-              className={styles.attachmentVideo}
-            />
-          )
-        }
-        if (payload.mediaType.startsWith('audio/')) {
-          return (
-            <audio
-              src={payload.url}
-              controls
-              className={styles.attachmentAudio}
-            />
-          )
-        }
-        return (
-          <FileCard
-            url={payload.url}
-            fileName={payload.fileName}
-            mediaType={payload.mediaType}
-            fileSize={payload.fileSize}
-          />
-        )
-    }
-  }
-
   return (
     <div className={styles.window}>
-      {/* Chat header */}
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={onBack} aria-label="Назад">←</button>
         <div className={styles.chatInfo}>
           <span className={styles.chatIcon}>
-            {chat.type === 'Group' ? '⬡' : '◎'}
+            {chat.type === 'Group' ? ChatIcons.group : ChatIcons.private}
           </span>
           <div>
             <h2 className={styles.chatTitle}>{getChatTitle()}</h2>
@@ -109,11 +58,10 @@ export default function ChatWindow({ chat, onBack }: Props) {
         </div>
       </div>
 
-      {/* Messages */}
       <div className={styles.messages}>
         {chatMessages.length === 0 && (
           <div className={styles.emptyState}>
-            <span className={styles.emptyIcon}>◈</span>
+            <span className={styles.emptyIcon}>{ChatIcons.brand}</span>
             <p>Сообщений пока нет.</p>
             <p>Напишите первым!</p>
           </div>
@@ -142,7 +90,7 @@ export default function ChatWindow({ chat, onBack }: Props) {
                 <span className={styles.senderName}>{msg.senderName}</span>
               )}
               <div className={styles.bubble}>
-                {renderPayload(msg.payload)}
+                <MessageContent payload={msg.payload} onOpenImage={setLightbox} />
                 <span className={styles.bubbleTime}>{formatTime(msg.sentAt)}</span>
               </div>
             </div>
@@ -151,7 +99,6 @@ export default function ChatWindow({ chat, onBack }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
       <MessageInput onSend={sendMessage} />
       {lightbox && (
         <ImageLightbox

@@ -1,16 +1,6 @@
 import * as signalR from '@microsoft/signalr'
 import type { MessagePayload } from '../types'
 
-export interface SendMessageRequest {
-  text?: string | null
-  url?: string | null
-  fileName?: string | null
-  mediaType?: string | null
-  caption?: string | null
-  captionPosition?: string
-  fileSize?: number | null
-}
-
 type MessageHandler = (userName: string, payload: MessagePayload) => void
 type VoidHandler = () => void
 
@@ -55,8 +45,8 @@ class ChatHub {
     await this.connection?.invoke('LeaveGroupChat')
   }
 
-  async sendMessage(request: SendMessageRequest) {
-    await this.connection?.invoke('SendMessage', request)
+  async sendMessage(payload: MessagePayload) {
+    await this.connection?.invoke('SendMessage', payload)
   }
 
   onReceiveMessage(handler: MessageHandler) {

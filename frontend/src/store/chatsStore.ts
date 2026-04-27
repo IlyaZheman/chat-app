@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Chat, Message, MessagePayload } from '../types'
 import { chatsApi } from '../api/chatsApi'
-import { chatHub, type SendMessageRequest } from '../hub/chatHub'
+import { chatHub } from '../hub/chatHub'
 
 interface ChatsStore {
   chats: Chat[]
@@ -38,41 +38,10 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       const chatId = get().activeChatId
       if (!chatId) return
 
-      const existing = get().messages[chatId] ?? []
-      const now = Date.now()
-
-      const isDuplicate = existing.some(m =>
-        m.senderName === senderName &&
-        payloadsMatch(m.payload, payload) &&
-        now - new Date(m.sentAt).getTime() < 2000 &&
-        m.id.startsWith('optimistic-')
-      )
-
-      if (isDuplicate) {
-        set(s => ({
-          messages: {
-            ...s.messages,
-            [chatId]: (s.messages[chatId] ?? []).map(m =>
-              m.id.startsWith('optimistic-') && m.senderName === senderName && payloadsMatch(m.payload, payload)
-                ? { ...m, id: crypto.randomUUID() }
-                : m
-            ),
-          },
-        }))
-        return
-      }
-
-      const msg: Message = {
-        id: crypto.randomUUID(),
-        senderName,
-        payload,
-        sentAt: new Date().toISOString(),
-      }
-
       set(s => ({
         messages: {
           ...s.messages,
-          [chatId]: [...(s.messages[chatId] ?? []), msg],
+          [chatId]: reconcileServerMessage(s.messages[chatId] ?? [], senderName, payload),
         },
       }))
     })
@@ -99,7 +68,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     if (!chatId || !auth) return
 
     const optimisticMsg: Message = {
-      id: `optimistic-${crypto.randomUUID()}`,
+      id: `${OPTIMISTIC_PREFIX}${crypto.randomUUID()}`,
       senderName: auth.userName,
       payload,
       sentAt: new Date().toISOString(),
@@ -113,7 +82,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     }))
 
     try {
-      await chatHub.sendMessage(payloadToRequest(payload))
+      await chatHub.sendMessage(payload)
     } catch {
       set(s => ({
         messages: {
@@ -147,16 +116,8 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
   },
 }))
 
-function payloadToRequest(payload: MessagePayload): SendMessageRequest {
-  switch (payload.type) {
-    case 'text':
-      return { text: payload.text }
-    case 'image':
-      return { url: payload.url, fileName: payload.fileName, mediaType: payload.mediaType, caption: payload.caption, captionPosition: payload.captionPosition, fileSize: payload.fileSize }
-    case 'file':
-      return { url: payload.url, fileName: payload.fileName, mediaType: payload.mediaType, fileSize: payload.fileSize }
-  }
-}
+const OPTIMISTIC_PREFIX = 'optimistic-'
+const DEDUP_WINDOW_MS = 2000
 
 function payloadsMatch(a: MessagePayload, b: MessagePayload): boolean {
   if (a.type !== b.type) return false
@@ -164,4 +125,32 @@ function payloadsMatch(a: MessagePayload, b: MessagePayload): boolean {
   if (a.type === 'image' && b.type === 'image') return a.url === b.url
   if (a.type === 'file' && b.type === 'file') return a.url === b.url
   return false
+}
+
+function reconcileServerMessage(
+  messages: Message[],
+  senderName: string,
+  payload: MessagePayload,
+): Message[] {
+  const now = Date.now()
+  const matchIndex = messages.findIndex(m =>
+    m.id.startsWith(OPTIMISTIC_PREFIX) &&
+    m.senderName === senderName &&
+    payloadsMatch(m.payload, payload) &&
+    now - new Date(m.sentAt).getTime() < DEDUP_WINDOW_MS
+  )
+
+  if (matchIndex !== -1) {
+    const reconciled = [...messages]
+    reconciled[matchIndex] = { ...reconciled[matchIndex], id: crypto.randomUUID() }
+    return reconciled
+  }
+
+  const fresh: Message = {
+    id: crypto.randomUUID(),
+    senderName,
+    payload,
+    sentAt: new Date().toISOString(),
+  }
+  return [...messages, fresh]
 }

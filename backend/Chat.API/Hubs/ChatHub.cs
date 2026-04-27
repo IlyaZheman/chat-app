@@ -5,17 +5,6 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Chat.API.Hubs;
 
-public record SendMessageRequest(
-    string? Text,
-    string? Url = null,
-    string? FileName = null,
-    string? MediaType = null,
-    string? Caption = null,
-    string CaptionPosition = "below",
-    long? FileSize = null
-);
-
-
 [Authorize]
 public class ChatHub(
     JoinChatHandler joinChatHandler,
@@ -49,11 +38,9 @@ public class ChatHub(
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, chatId.ToString());
     }
 
-    public async Task SendMessage(SendMessageRequest request)
+    public async Task SendMessage(MessagePayloadDto payload)
     {
-        var command = new SendMessageCommand(
-            request.Text, request.Url, request.FileName,
-            request.MediaType, request.Caption, request.CaptionPosition, request.FileSize);
+        var command = new SendMessageCommand(payload.ToDomain());
         await sendMessageHandler.HandleAsync(Context.ConnectionId, command);
     }
 

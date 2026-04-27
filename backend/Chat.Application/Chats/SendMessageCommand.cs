@@ -1,11 +1,5 @@
+using Chat.Domain.Models;
+
 namespace Chat.Application.Chats;
 
-public record SendMessageCommand(
-    string? Text,
-    string? Url,
-    string? FileName,
-    string? MediaType,
-    string? Caption = null,
-    string CaptionPosition = "below",
-    long? FileSize = null
-);
+public record SendMessageCommand(MessagePayload Payload);

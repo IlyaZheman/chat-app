@@ -7,46 +7,29 @@ namespace Chat.Infrastructure.Notifications;
 public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext) : IChatNotifier
     where THub : Hub<IChatClient>
 {
-    public async Task NotifyMessageAsync(Guid chatId, string senderName, MessagePayload payload, CancellationToken ct = default)
-    {
-        await hubContext.Clients
-            .Group(chatId.ToString())
-            .ReceiveMessage(senderName, ToDto(payload));
-    }
+    private const string SystemSenderName = "System";
+    private const string UserJoinedMessage = "{0} присоединился к чату";
+    private const string UserLeftMessage = "{0} покинул чат";
+    private const string UserGroupPrefix = "user-";
 
-    public async Task NotifyUserJoinedAsync(Guid chatId, string userName, CancellationToken ct = default)
-    {
-        await hubContext.Clients
-            .Group(chatId.ToString())
-            .ReceiveMessage("System", new TextPayloadDto($"{userName} присоединился к чату"));
-    }
+    public Task NotifyMessageAsync(Guid chatId, string senderName, MessagePayload payload, CancellationToken ct = default) =>
+        ChatGroup(chatId).ReceiveMessage(senderName, MessagePayloadDto.From(payload));
 
-    public async Task NotifyUserLeftAsync(Guid chatId, string userName, CancellationToken ct = default)
-    {
-        await hubContext.Clients
-            .Group(chatId.ToString())
-            .ReceiveMessage("System", new TextPayloadDto($"{userName} покинул чат"));
-    }
+    public Task NotifyUserJoinedAsync(Guid chatId, string userName, CancellationToken ct = default) =>
+        SendSystemMessageAsync(chatId, string.Format(UserJoinedMessage, userName));
 
-    public async Task NotifyChatDeletedAsync(Guid chatId, CancellationToken ct = default)
-    {
-        await hubContext.Clients
-            .Group(chatId.ToString())
-            .ChatDeleted(chatId);
-    }
+    public Task NotifyUserLeftAsync(Guid chatId, string userName, CancellationToken ct = default) =>
+        SendSystemMessageAsync(chatId, string.Format(UserLeftMessage, userName));
 
-    public async Task NotifyNewPrivateChatAsync(Guid targetUserId, CancellationToken ct = default)
-    {
-        await hubContext.Clients
-            .Group($"user-{targetUserId}")
-            .NewChatCreated();
-    }
+    public Task NotifyChatDeletedAsync(Guid chatId, CancellationToken ct = default) =>
+        ChatGroup(chatId).ChatDeleted(chatId);
 
-    private static MessagePayloadDto ToDto(MessagePayload payload) => payload switch
-    {
-        TextPayload t  => new TextPayloadDto(t.Text),
-        ImagePayload i => new ImagePayloadDto(i.Url, i.FileName, i.Caption, i.CaptionPosition.ToString().ToLower(), i.FileSize),
-        FilePayload f  => new FilePayloadDto(f.Url, f.FileName, f.MediaType, f.FileSize),
-        _              => throw new NotSupportedException(payload.GetType().Name)
-    };
+    public Task NotifyNewPrivateChatAsync(Guid targetUserId, CancellationToken ct = default) =>
+        hubContext.Clients.Group($"{UserGroupPrefix}{targetUserId}").NewChatCreated();
+
+    private Task SendSystemMessageAsync(Guid chatId, string text) =>
+        ChatGroup(chatId).ReceiveMessage(SystemSenderName, new TextPayloadDto(text));
+
+    private IChatClient ChatGroup(Guid chatId) =>
+        hubContext.Clients.Group(chatId.ToString());
 }

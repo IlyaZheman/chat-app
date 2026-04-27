@@ -3,8 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace Chat.Infrastructure.Persistence;
 
-public class ChatDbContextFactory
-    : IDesignTimeDbContextFactory<AppDbContext>
+public class ChatDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
     {

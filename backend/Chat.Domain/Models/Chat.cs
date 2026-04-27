@@ -97,11 +97,7 @@ public class Chat
         if (Type != ChatType.Group)
             throw new InvalidOperationException("Cannot delete a private chat.");
 
-        var member = _members.FirstOrDefault(m => m.UserId == requesterId)
-            ?? throw new ForbiddenException("User is not a member of this chat.");
-
-        if (member.Role != ChatMemberRole.Owner)
-            throw new ForbiddenException("Only the owner can delete this chat.");
+        EnsureIsOwner(requesterId);
     }
 
     public void RemoveMemberByOwner(Guid requesterId, Guid targetUserId)
@@ -109,15 +105,20 @@ public class Chat
         if (Type != ChatType.Group)
             throw new InvalidOperationException("Cannot remove members from a private chat.");
 
-        var requester = _members.FirstOrDefault(m => m.UserId == requesterId)
-            ?? throw new ForbiddenException("User is not a member of this chat.");
-
-        if (requester.Role != ChatMemberRole.Owner)
-            throw new ForbiddenException("Only the owner can remove members.");
+        EnsureIsOwner(requesterId);
 
         if (requesterId == targetUserId)
             throw new InvalidOperationException("Owner cannot remove themselves. Delete the chat instead.");
 
         RemoveMember(targetUserId);
+    }
+
+    private void EnsureIsOwner(Guid userId)
+    {
+        var member = _members.FirstOrDefault(m => m.UserId == userId)
+            ?? throw new ForbiddenException("User is not a member of this chat.");
+
+        if (member.Role != ChatMemberRole.Owner)
+            throw new ForbiddenException("Only the owner can perform this action.");
     }
 }
