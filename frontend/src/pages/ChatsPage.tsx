@@ -6,16 +6,19 @@ import { chatHub } from '../hub/chatHub'
 import { usersApi } from '../api/usersApi'
 import ChatList from '../components/ChatList'
 import ChatWindow from '../components/ChatWindow'
+import DetailsPanel from '../components/DetailsPanel'
+import { Icon } from '../components/chatIcons'
 import styles from './ChatsPage.module.css'
 
 export default function ChatsPage() {
   const navigate = useNavigate()
-  const { auth, setAuth, clearAuth } = useAuthStore()
+  const { setAuth, clearAuth } = useAuthStore()
   const { chats, activeChatId, loadChats } = useChatsStore()
 
   const activeChat = chats.find(c => c.id === activeChatId) ?? null
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [detailsOpen, setDetailsOpen] = useState(false)
 
   useEffect(() => {
     if (!activeChatId) setSidebarOpen(true)
@@ -23,6 +26,10 @@ export default function ChatsPage() {
 
   const handleChatOpen = () => setSidebarOpen(false)
   const handleBackToList = () => setSidebarOpen(true)
+  const toggleDetails = () => setDetailsOpen(o => !o)
+  const closeDetails = () => setDetailsOpen(false)
+
+  const detailsVisible = detailsOpen && !!activeChat
 
   useEffect(() => {
     const init = async () => {
@@ -54,24 +61,37 @@ export default function ChatsPage() {
   }
 
   return (
-    <div className={styles.layout} data-sidebar-open={sidebarOpen}>
+    <div
+      className={styles.layout}
+      data-sidebar-open={sidebarOpen}
+      data-details-open={detailsVisible}
+    >
       <ChatList onLogout={handleLogout} onChatOpen={handleChatOpen} />
 
       <main className={styles.main}>
         {activeChat ? (
-          <ChatWindow chat={activeChat} onBack={handleBackToList} />
+          <ChatWindow
+            chat={activeChat}
+            onBack={handleBackToList}
+            onToggleDetails={toggleDetails}
+            detailsOpen={detailsVisible}
+          />
         ) : (
           <div className={styles.placeholder}>
             <div className={styles.placeholderInner}>
-              <span className={styles.placeholderIcon}>◈</span>
+              <div className={styles.placeholderIconWrap}>
+                <Icon.Brand size={28} />
+              </div>
               <h2 className={styles.placeholderTitle}>Выберите чат</h2>
               <p className={styles.placeholderText}>
-                Откройте чат из списка слева или создайте новый
+                Откройте беседу из списка слева или создайте новую
               </p>
             </div>
           </div>
         )}
       </main>
+
+      {detailsVisible && <DetailsPanel chat={activeChat} onClose={closeDetails} />}
     </div>
   )
 }

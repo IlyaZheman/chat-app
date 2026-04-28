@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useChatsStore } from '../store/chatsStore'
+import { Icon } from './chatIcons'
 import styles from './ChatList.module.css'
 
 interface Props {
@@ -28,7 +29,9 @@ export default function NewGroupView({ onBack, onCreated }: Props) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.subHeader}>
-        <button className={styles.backBtn} onClick={onBack} title="Назад">←</button>
+        <button className={styles.backBtn} onClick={onBack} title="Назад" aria-label="Назад">
+          <Icon.ArrowLeft size={18} />
+        </button>
         <span className={styles.subTitle}>Новая группа</span>
       </div>
       <form className={styles.groupForm} onSubmit={handleSubmit}>

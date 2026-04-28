@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useChatsStore } from '../store/chatsStore'
 import { usersApi } from '../api/usersApi'
 import type { User } from '../types'
-import { ChatIcons } from './chatIcons'
+import { Icon } from './chatIcons'
+import { Avatar } from './Avatar'
 import styles from './ChatList.module.css'
 
 interface Props {
@@ -37,13 +38,16 @@ export default function NewPrivateView({ onBack, onCreated }: Props) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.subHeader}>
-        <button className={styles.backBtn} onClick={onBack} title="Назад">←</button>
+        <button className={styles.backBtn} onClick={onBack} title="Назад" aria-label="Назад">
+          <Icon.ArrowLeft size={18} />
+        </button>
         <span className={styles.subTitle}>Новое сообщение</span>
       </div>
       <div className={styles.searchWrap}>
+        <span className={styles.searchIcon}><Icon.Search size={16} /></span>
         <input
-          className={styles.searchInput}
-          placeholder="Поиск пользователя…"
+          className={styles.searchField}
+          placeholder="Поиск пользователя"
           value={search}
           onChange={e => setSearch(e.target.value)}
           autoFocus
@@ -58,7 +62,7 @@ export default function NewPrivateView({ onBack, onCreated }: Props) {
             disabled={submitting}
             onClick={() => handleSelect(u)}
           >
-            <span className={styles.chatIcon}>{ChatIcons.private}</span>
+            <Avatar name={u.userName} size={40} />
             <span className={styles.chatLabel}>{u.userName}</span>
           </button>
         ))}

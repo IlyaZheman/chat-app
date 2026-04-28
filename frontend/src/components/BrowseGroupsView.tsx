@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useChatsStore } from '../store/chatsStore'
-import { ChatIcons } from './chatIcons'
+import { Icon } from './chatIcons'
+import { Avatar } from './Avatar'
 import styles from './ChatList.module.css'
 
 interface Props {
@@ -35,13 +36,16 @@ export default function BrowseGroupsView({ onBack, onJoined }: Props) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.subHeader}>
-        <button className={styles.backBtn} onClick={onBack} title="Назад">←</button>
+        <button className={styles.backBtn} onClick={onBack} title="Назад" aria-label="Назад">
+          <Icon.ArrowLeft size={18} />
+        </button>
         <span className={styles.subTitle}>Найти группу</span>
       </div>
       <div className={styles.searchWrap}>
+        <span className={styles.searchIcon}><Icon.Search size={16} /></span>
         <input
-          className={styles.searchInput}
-          placeholder="Поиск группы…"
+          className={styles.searchField}
+          placeholder="Поиск группы"
           value={search}
           onChange={e => setSearch(e.target.value)}
           autoFocus
@@ -51,10 +55,11 @@ export default function BrowseGroupsView({ onBack, onJoined }: Props) {
         {filtered.length === 0 && <p className={styles.empty}>Нет групп</p>}
         {filtered.map(g => {
           const already = joinedIds.has(g.id)
+          const name = g.name ?? 'Группа'
           return (
             <div key={g.id} className={styles.groupBrowseItem}>
-              <span className={styles.chatIcon}>{ChatIcons.group}</span>
-              <span className={styles.chatLabel}>{g.name ?? 'Группа'}</span>
+              <Avatar name={name} size={40} />
+              <span className={styles.chatLabel}>{name}</span>
               {already
                 ? <span className={styles.chatBadge}>Вступил</span>
                 : (

@@ -1,4 +1,5 @@
 ﻿using Chat.Application.Interfaces;
+using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 
 namespace Chat.Application.Auth.Login;
@@ -11,14 +12,8 @@ public class LoginUserHandler(
     public async Task<string> HandleAsync(LoginUserQuery query, CancellationToken ct)
     {
         var user = await usersRepository.GetByEmailAsync(query.Email, ct);
-
-        if (user == null)
-            throw new Exception(query.Email);
-
-        var isValid = passwordHasher.Verify(query.Password, user.PasswordHash);
-
-        if (!isValid)
-            throw new Exception();
+        if (user is null || !passwordHasher.Verify(query.Password, user.PasswordHash))
+            throw new ForbiddenException("Invalid email or password.");
 
         return jwtProvider.GenerateToken(user);
     }

@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MessagePayload } from '../types'
 import { uploadsApi } from '../api/uploadsApi'
+import { Icon } from './chatIcons'
 import styles from './MessageInput.module.css'
 
 const MAX_SIZE = 10 * 1024 * 1024
@@ -18,7 +19,16 @@ export default function MessageInput({ onSend, disabled }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isImage = (file: File) => file.type.startsWith('image/')
-  const previewUrl = pendingFile && isImage(pendingFile) ? URL.createObjectURL(pendingFile) : null
+
+  const previewUrl = useMemo(
+    () => (pendingFile && isImage(pendingFile) ? URL.createObjectURL(pendingFile) : null),
+    [pendingFile],
+  )
+
+  useEffect(() => {
+    return () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }
+  }, [previewUrl])
+
   const canSend = (text.trim() || pendingFile) && !disabled && !uploading
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,50 +84,61 @@ export default function MessageInput({ onSend, disabled }: Props) {
         <div className={styles.preview}>
           {previewUrl
             ? <img src={previewUrl} alt={pendingFile.name} className={styles.previewImage} />
-            : <span className={styles.previewPill}>📎 {pendingFile.name}</span>
+            : (
+              <span className={styles.previewPill}>
+                <Icon.File size={14} />
+                {pendingFile.name}
+              </span>
+            )
           }
           <button
             type="button"
             className={styles.removeFile}
             onClick={() => { setPendingFile(null); setFileError(null) }}
             aria-label="Удалить файл"
-          >×</button>
+          >
+            <Icon.Close size={14} />
+          </button>
         </div>
       )}
       {fileError && <p className={styles.fileError}>{fileError}</p>}
       <form className={styles.form} onSubmit={handleSubmit}>
-        <button
-          type="button"
-          className={styles.attachBtn}
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || uploading}
-          title="Прикрепить файл"
-        >
-          📎
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.txt,.zip,.mp4,.webm,.mov,.mp3,.wav,.ogg"
-          className={styles.fileInput}
-          onChange={handleFileChange}
-        />
-        <textarea
-          className={styles.input}
-          placeholder={pendingFile ? 'Подпись (необязательно)…' : 'Сообщение'}
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={disabled || uploading}
-          rows={1}
-        />
+        <div className={styles.inputBar}>
+          <button
+            type="button"
+            className={styles.attachBtn}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || uploading}
+            title="Прикрепить файл"
+            aria-label="Прикрепить файл"
+          >
+            <Icon.Paperclip size={18} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.txt,.zip,.mp4,.webm,.mov,.mp3,.wav,.ogg"
+            className={styles.fileInput}
+            onChange={handleFileChange}
+          />
+          <textarea
+            className={styles.input}
+            placeholder={pendingFile ? 'Подпись (необязательно)…' : 'Сообщение'}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled || uploading}
+            rows={1}
+          />
+        </div>
         <button
           className={styles.sendBtn}
           type="submit"
           disabled={!canSend}
           title={uploading ? 'Загрузка…' : 'Отправить'}
+          aria-label="Отправить"
         >
-          {uploading ? '…' : '↑'}
+          <Icon.Send size={18} />
         </button>
       </form>
     </div>

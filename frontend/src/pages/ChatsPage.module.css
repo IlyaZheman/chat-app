@@ -1,14 +1,23 @@
 .layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr var(--details-w);
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  background: var(--bg);
+  gap: 0;
+}
+
+.layout[data-details-open="false"] {
+  grid-template-columns: var(--sidebar-w) 1fr;
 }
 
 .main {
-  flex: 1;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 
 .placeholder {
@@ -16,54 +25,65 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    radial-gradient(ellipse 60% 50% at 60% 50%, rgba(124, 106, 247, 0.05) 0%, transparent 70%),
-    var(--bg);
+  padding: 32px;
 }
 
 .placeholderInner {
   text-align: center;
-  animation: appear 0.4s var(--ease);
+  max-width: 320px;
+  animation: appear 0.3s var(--ease);
 }
 
 @keyframes appear {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.placeholderIcon {
-  display: block;
-  font-size: 48px;
-  color: var(--muted);
-  margin-bottom: 20px;
+.placeholderIconWrap {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .placeholderTitle {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  letter-spacing: -0.4px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
+  letter-spacing: -0.2px;
+  color: var(--text);
+  margin-bottom: 6px;
 }
 
 .placeholderText {
   font-size: 14px;
-  color: var(--subtle);
-  line-height: 1.6;
+  color: var(--text-dim);
+  line-height: 1.55;
 }
 
-@media (max-width: 767px) {
-  .layout {
+/* ── Tablet: details panel becomes an overlay over the chat ── */
+@media (max-width: 1100px) {
+  .layout,
+  .layout[data-details-open="true"],
+  .layout[data-details-open="false"] {
+    grid-template-columns: var(--sidebar-w) 1fr;
     position: relative;
   }
+}
 
-  .layout aside {
+/* ── Mobile: single column with sliding sidebar ── */
+@media (max-width: 767px) {
+  .layout,
+  .layout[data-details-open="true"],
+  .layout[data-details-open="false"] {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+  .layout aside:first-child {
     transition: transform 0.28s var(--ease), visibility 0s linear 0.28s;
     position: absolute;
     top: 0;
@@ -72,14 +92,12 @@
     height: 100%;
     z-index: 20;
   }
-
-  .layout[data-sidebar-open="true"] aside {
+  .layout[data-sidebar-open="true"] aside:first-child {
     transform: translateX(0);
     visibility: visible;
     transition: transform 0.28s var(--ease), visibility 0s linear 0s;
   }
-
-  .layout[data-sidebar-open="false"] aside {
+  .layout[data-sidebar-open="false"] aside:first-child {
     transform: translateX(-100%);
     visibility: hidden;
     pointer-events: none;

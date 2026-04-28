@@ -1,3 +1,4 @@
+import { formatFileSize } from '../utils/format'
 import styles from './FileCard.module.css'
 
 interface Props {
@@ -16,13 +17,6 @@ function getFileIcon(fileName: string): string {
     case 'txt': return '📃'
     default: return '📎'
   }
-}
-
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export default function FileCard({ url, fileName, fileSize }: Props) {

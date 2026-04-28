@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { formatFileSize } from '../utils/format'
 import styles from './ImageLightbox.module.css'
 
 interface Props {
@@ -6,13 +7,6 @@ interface Props {
   fileName: string
   fileSize?: number
   onClose: () => void
-}
-
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export default function ImageLightbox({ url, fileName, fileSize, onClose }: Props) {

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Chat, Message, MessagePayload } from '../types'
 import { chatsApi } from '../api/chatsApi'
 import { chatHub } from '../hub/chatHub'
+import { useAuthStore } from './authStore'
 
 interface ChatsStore {
   chats: Chat[]
@@ -64,7 +65,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
 
   sendMessage: async (payload) => {
     const chatId = get().activeChatId
-    const auth = await import('../store/authStore').then(m => m.useAuthStore.getState().auth)
+    const auth = useAuthStore.getState().auth
     if (!chatId || !auth) return
 
     const optimisticMsg: Message = {

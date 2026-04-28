@@ -4,13 +4,16 @@ import { useAuthStore } from '../store/authStore'
 import MessageInput from './MessageInput'
 import MessageContent from './MessageContent'
 import ImageLightbox from './ImageLightbox'
+import { Avatar } from './Avatar'
+import { Icon } from './chatIcons'
 import type { Chat } from '../types'
-import { ChatIcons } from './chatIcons'
 import styles from './ChatWindow.module.css'
 
 interface Props {
   chat: Chat
   onBack: () => void
+  onToggleDetails: () => void
+  detailsOpen: boolean
 }
 
 interface LightboxImage {
@@ -19,7 +22,7 @@ interface LightboxImage {
   fileSize?: number
 }
 
-export default function ChatWindow({ chat, onBack }: Props) {
+export default function ChatWindow({ chat, onBack, onToggleDetails, detailsOpen }: Props) {
   const auth = useAuthStore(s => s.auth)
   const { messages, sendMessage } = useChatsStore()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -36,34 +39,51 @@ export default function ChatWindow({ chat, onBack }: Props) {
     return chat.otherUserName ?? 'Личное сообщение'
   }
 
+  const subtitle = chat.type === 'Group' ? 'Группа' : 'В сети'
+
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
+
+  const title = getChatTitle()
 
   return (
     <div className={styles.window}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={onBack} aria-label="Назад">←</button>
-        <div className={styles.chatInfo}>
-          <span className={styles.chatIcon}>
-            {chat.type === 'Group' ? ChatIcons.group : ChatIcons.private}
-          </span>
-          <div>
-            <h2 className={styles.chatTitle}>{getChatTitle()}</h2>
-            <p className={styles.chatMeta}>
-              {chat.type === 'Group' ? 'Группа' : 'Личный чат'}
-              {' · '}
-              <span className={styles.chatId}>{chat.id.slice(0, 8)}</span>
-            </p>
+        <button className={styles.backBtn} onClick={onBack} aria-label="Назад">
+          <Icon.ArrowLeft size={18} />
+        </button>
+        <button
+          type="button"
+          className={styles.headerInfo}
+          onClick={onToggleDetails}
+          aria-label={detailsOpen ? 'Скрыть детали чата' : 'Показать детали чата'}
+          aria-expanded={detailsOpen}
+        >
+          <Avatar name={title} size={40} />
+          <div className={styles.chatInfo}>
+            <h2 className={styles.chatTitle}>{title}</h2>
+            <p className={styles.chatMeta}>{subtitle}</p>
           </div>
+        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.headerBtn} title="Звонок" aria-label="Звонок">
+            <Icon.Phone size={18} />
+          </button>
+          <button className={styles.headerBtn} title="Видео" aria-label="Видео">
+            <Icon.Video size={18} />
+          </button>
+          <button className={styles.headerBtn} title="Ещё" aria-label="Ещё">
+            <Icon.More size={18} />
+          </button>
         </div>
       </div>
 
       <div className={styles.messages}>
         {chatMessages.length === 0 && (
           <div className={styles.emptyState}>
-            <span className={styles.emptyIcon}>{ChatIcons.brand}</span>
-            <p>Сообщений пока нет.</p>
-            <p>Напишите первым!</p>
+            <div className={styles.emptyBadge}><Icon.Brand size={26} /></div>
+            <p className={styles.emptyTitle}>Начните беседу</p>
+            <p className={styles.emptySubtitle}>Напишите первое сообщение — оно появится здесь.</p>
           </div>
         )}
 
@@ -86,7 +106,7 @@ export default function ChatWindow({ chat, onBack }: Props) {
               key={msg.id}
               className={`${styles.msgRow} ${isOwn ? styles.own : ''} ${isContinuation ? styles.continuation : ''}`}
             >
-              {!isOwn && !isContinuation && (
+              {!isOwn && !isContinuation && chat.type === 'Group' && (
                 <span className={styles.senderName}>{msg.senderName}</span>
               )}
               <div className={styles.bubble}>
