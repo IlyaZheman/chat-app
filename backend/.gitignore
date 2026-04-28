@@ -24,6 +24,9 @@ artifacts/
 # Publish output
 publish/
 
+# Local secrets
+.env
+
 ### Windows
 # Windows thumbnail cache files
 Thumbs.db
