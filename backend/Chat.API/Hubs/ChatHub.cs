@@ -1,3 +1,4 @@
+using Chat.API.Extensions;
 using Chat.Application.Chats;
 using Chat.Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authorization;
@@ -50,11 +51,7 @@ public class ChatHub(
         await base.OnDisconnectedAsync(exception);
     }
 
-    private Guid GetUserId() =>
-        Guid.Parse(Context.User?.FindFirst("userId")?.Value
-            ?? throw new HubException("Unauthorized"));
+    private Guid GetUserId() => Context.User!.GetUserId();
 
-    private string GetUserName() =>
-        Context.User?.FindFirst("userName")?.Value
-        ?? throw new HubException("Unauthorized");
+    private string GetUserName() => Context.User!.GetUserName();
 }

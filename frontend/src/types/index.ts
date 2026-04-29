@@ -26,4 +26,5 @@ export interface Message {
 export interface AuthState {
   userId: string
   userName: string
+  role: string
 }

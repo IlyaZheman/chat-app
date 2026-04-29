@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -43,7 +45,11 @@ public static class InfrastructureExtension
                     .AllowCredentials();
             }));
 
-        services.AddSignalR();
+        var enumConverter = new JsonStringEnumConverter(JsonNamingPolicy.CamelCase);
+        services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
+            o.SerializerOptions.Converters.Add(enumConverter));
+        services.AddSignalR().AddJsonProtocol(o =>
+            o.PayloadSerializerOptions.Converters.Add(enumConverter));
 
         services.AddScoped<IUsersRepository, UsersRepository>();
         services.AddScoped<IChatsRepository, ChatsRepository>();

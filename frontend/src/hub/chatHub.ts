@@ -5,12 +5,17 @@ type MessageHandler = (userName: string, payload: MessagePayload) => void
 type VoidHandler = () => void
 
 class ChatHub {
-  readonly handlers: Set<MessageHandler> = new Set()
+  private readonly handlers: Set<MessageHandler> = new Set()
   private connection: signalR.HubConnection | null = null
   private readonly newChatHandlers: Set<VoidHandler> = new Set()
+  private initialized = false
 
   get isConnected() {
     return this.connection?.state === signalR.HubConnectionState.Connected
+  }
+
+  get isInitialized() {
+    return this.initialized
   }
 
   async connect() {
@@ -32,7 +37,9 @@ class ChatHub {
   }
 
   async disconnect() {
+    this.initialized = false
     this.handlers.clear()
+    this.newChatHandlers.clear()
     await this.connection?.stop()
     this.connection = null
   }
@@ -50,6 +57,7 @@ class ChatHub {
   }
 
   onReceiveMessage(handler: MessageHandler) {
+    this.initialized = true
     this.handlers.add(handler)
   }
 

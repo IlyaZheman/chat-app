@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Users;
+using Chat.API.Extensions;
 using Chat.Application.Admin;
 using Chat.Application.Auth.Login;
 using Chat.Application.Auth.Register;
@@ -40,8 +41,8 @@ public static class UsersEndpoints
 
     private static IResult Me(ClaimsPrincipal user)
     {
-        var userId = user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException();
-        var userName = user.FindFirstValue("userName") ?? throw new UnauthorizedAccessException();
+        var userId = user.GetUserId();
+        var userName = user.GetUserName();
         var role = user.FindFirstValue("role") ?? "User";
 
         return Results.Ok(new { userId, userName, role });
@@ -52,7 +53,7 @@ public static class UsersEndpoints
         GetAllUsersHandler handler,
         CancellationToken ct)
     {
-        var currentUserId = Guid.Parse(user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException());
+        var currentUserId = user.GetUserId();
         var users = await handler.HandleAsync(ct);
         var response = users
             .Where(u => u.Id != currentUserId)

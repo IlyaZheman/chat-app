@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Chat.API.Contracts.Chats;
+using Chat.API.Extensions;
 using Chat.Application.Chats;
 using Chat.Domain.Enums;
 using Chat.Infrastructure.Notifications;
@@ -30,7 +31,7 @@ public static class ChatsEndpoints
         GetUserChatsHandler handler,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var userId = user.GetUserId();
         var chats = await handler.HandleAsync(userId, ct);
 
         var response = chats.Select(c =>
@@ -52,7 +53,7 @@ public static class ChatsEndpoints
         CreateGroupChatHandler handler,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var userId = user.GetUserId();
         var chatId = await handler.HandleAsync(request.Name, userId, ct);
         return Results.Ok(new { chatId });
     }
@@ -63,7 +64,7 @@ public static class ChatsEndpoints
         GetOrCreatePrivateChatHandler handler,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var userId = user.GetUserId();
         var chatId = await handler.HandleAsync(userId, request.TargetUserId, ct);
         return Results.Ok(new { chatId });
     }
@@ -74,7 +75,7 @@ public static class ChatsEndpoints
         GetChatMessagesHandler handler,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var userId = user.GetUserId();
         var messages = await handler.HandleAsync(chatId, userId, ct: ct);
 
         var response = messages.Select(m =>
@@ -91,7 +92,7 @@ public static class ChatsEndpoints
         AddMemberToGroupChatHandler handler,
         CancellationToken ct)
     {
-        var requesterId = GetUserId(user);
+        var requesterId = user.GetUserId();
         await handler.HandleAsync(chatId, requesterId, request.UserId, ct);
         return Results.Ok();
     }
@@ -102,7 +103,7 @@ public static class ChatsEndpoints
         DeleteGroupChatHandler handler,
         CancellationToken ct)
     {
-        var requesterId = GetUserId(user);
+        var requesterId = user.GetUserId();
         await handler.HandleAsync(chatId, requesterId, ct);
         return Results.NoContent();
     }
@@ -114,7 +115,7 @@ public static class ChatsEndpoints
         RemoveMemberFromGroupChatHandler handler,
         CancellationToken ct)
     {
-        var requesterId = GetUserId(user);
+        var requesterId = user.GetUserId();
         await handler.HandleAsync(chatId, requesterId, userId, ct);
         return Results.Ok();
     }
@@ -137,11 +138,9 @@ public static class ChatsEndpoints
         JoinGroupChatHandler handler,
         CancellationToken ct)
     {
-        var userId = GetUserId(user);
+        var userId = user.GetUserId();
         await handler.HandleAsync(chatId, userId, ct);
         return Results.Ok();
     }
 
-    private static Guid GetUserId(ClaimsPrincipal user) =>
-        Guid.Parse(user.FindFirstValue("userId") ?? throw new UnauthorizedAccessException());
 }

@@ -29,7 +29,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
   loading: false,
 
   initSignalR: () => {
-    if (chatHub.handlers.size > 0) return
+    if (chatHub.isInitialized) return
 
     chatHub.onNewChat(() => {
       get().loadChats()

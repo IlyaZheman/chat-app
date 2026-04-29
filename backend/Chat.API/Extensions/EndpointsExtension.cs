@@ -14,7 +14,6 @@ public static class EndpointsExtension
         api.MapChatsEndpoints();
         api.MapUploadsEndpoints();
         api.MapAdminEndpoints();
-        api.MapTestEndpoints();
 
         return app;
     }
