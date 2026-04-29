@@ -24,7 +24,7 @@ interface LightboxImage {
 
 export default function ChatWindow({ chat, onBack, onToggleDetails, detailsOpen }: Props) {
   const auth = useAuthStore(s => s.auth)
-  const { messages, sendMessage } = useChatsStore()
+  const { messages, sendMessage, onlineStatus, onlineCounts, typingUsers } = useChatsStore()
   const bottomRef = useRef<HTMLDivElement>(null)
   const [lightbox, setLightbox] = useState<LightboxImage | null>(null)
 
@@ -39,12 +39,33 @@ export default function ChatWindow({ chat, onBack, onToggleDetails, detailsOpen 
     return chat.otherUserName ?? 'Личное сообщение'
   }
 
-  const subtitle = chat.type === 'Group' ? 'Группа' : 'В сети'
+  const getSubtitle = () => {
+    const typing = typingUsers[chat.id] ?? []
+    if (typing.length === 1) return `${typing[0]} печатает…`
+    if (typing.length === 2) return `${typing[0]}, ${typing[1]} печатают…`
+    if (typing.length > 2) return `${typing[0]} и ещё ${typing.length - 1} печатают…`
+
+    if (chat.type === 'Group') {
+      const counts = onlineCounts[chat.id]
+      if (counts) return `${counts.members} участников, ${counts.online} онлайн`
+      if (chat.memberCount) return `${chat.memberCount} участников`
+      return 'Группа'
+    }
+
+    const partnerId = chat.otherUserId
+    if (partnerId) return onlineStatus[partnerId] ? 'В сети' : 'Не в сети'
+    return chat.isOnline ? 'В сети' : 'Не в сети'
+  }
+
+  const isPartnerOnline = chat.type === 'Private' && (
+    (chat.otherUserId ? onlineStatus[chat.otherUserId] : chat.isOnline) ?? false
+  )
 
   const formatTime = (iso: string) =>
     new Date(iso).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })
 
   const title = getChatTitle()
+  const subtitle = getSubtitle()
 
   return (
     <div className={styles.window}>
@@ -59,10 +80,15 @@ export default function ChatWindow({ chat, onBack, onToggleDetails, detailsOpen 
           aria-label={detailsOpen ? 'Скрыть детали чата' : 'Показать детали чата'}
           aria-expanded={detailsOpen}
         >
-          <Avatar name={title} size={40} />
+          <div className={styles.avatarWrap}>
+            <Avatar name={title} size={40} />
+            {isPartnerOnline && <span className={styles.onlineDot} aria-hidden="true" />}
+          </div>
           <div className={styles.chatInfo}>
             <h2 className={styles.chatTitle}>{title}</h2>
-            <p className={styles.chatMeta}>{subtitle}</p>
+            <p className={`${styles.chatMeta} ${(typingUsers[chat.id] ?? []).length > 0 ? styles.typing : ''}`}>
+              {subtitle}
+            </p>
           </div>
         </button>
         <div className={styles.headerActions}>
@@ -119,7 +145,7 @@ export default function ChatWindow({ chat, onBack, onToggleDetails, detailsOpen 
         <div ref={bottomRef} />
       </div>
 
-      <MessageInput onSend={sendMessage} />
+      <MessageInput onSend={sendMessage} chatId={chat.id} />
       {lightbox && (
         <ImageLightbox
           url={lightbox.url}

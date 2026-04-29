@@ -27,6 +27,12 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
     public Task NotifyNewPrivateChatAsync(Guid targetUserId, CancellationToken ct = default) =>
         hubContext.Clients.Group($"{UserGroupPrefix}{targetUserId}").NewChatCreated();
 
+    public Task NotifyUserOnlineStatusChangedAsync(Guid userId, bool isOnline, Guid contactUserId, CancellationToken ct = default) =>
+        hubContext.Clients.Group($"{UserGroupPrefix}{contactUserId}").UserOnlineStatusChanged(userId, isOnline);
+
+    public Task NotifyGroupOnlineCountAsync(Guid chatId, int onlineCount, int memberCount, CancellationToken ct = default) =>
+        ChatGroup(chatId).GroupOnlineCountChanged(chatId, onlineCount, memberCount);
+
     private Task SendSystemMessageAsync(Guid chatId, string text) =>
         ChatGroup(chatId).ReceiveMessage(SystemSenderName, new TextPayloadDto(text));
 

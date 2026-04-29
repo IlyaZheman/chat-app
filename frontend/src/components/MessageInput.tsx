@@ -1,22 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MessagePayload } from '../types'
 import { uploadsApi } from '../api/uploadsApi'
+import { useChatsStore } from '../store/chatsStore'
 import { Icon } from './chatIcons'
 import styles from './MessageInput.module.css'
 
 const MAX_SIZE = 10 * 1024 * 1024
+const TYPING_THROTTLE_MS = 3000
+const TYPING_STOP_DELAY_MS = 5000
 
 interface Props {
   onSend: (payload: MessagePayload) => void
+  chatId?: string
   disabled?: boolean
 }
 
-export default function MessageInput({ onSend, disabled }: Props) {
+export default function MessageInput({ onSend, chatId, disabled }: Props) {
   const [text, setText] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { notifyStartTyping, notifyStopTyping } = useChatsStore()
+  const lastTypingSentRef = useRef<number>(0)
+  const stopTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isImage = (file: File) => file.type.startsWith('image/')
 
@@ -43,6 +50,33 @@ export default function MessageInput({ onSend, disabled }: Props) {
     e.target.value = ''
   }
 
+  const stopTyping = () => {
+    if (!chatId) return
+    if (stopTypingTimerRef.current) {
+      clearTimeout(stopTypingTimerRef.current)
+      stopTypingTimerRef.current = null
+    }
+    notifyStopTyping(chatId)
+    lastTypingSentRef.current = 0
+  }
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value)
+    if (!chatId) return
+    if (!e.target.value) { stopTyping(); return }
+    const now = Date.now()
+    if (now - lastTypingSentRef.current > TYPING_THROTTLE_MS) {
+      lastTypingSentRef.current = now
+      notifyStartTyping(chatId)
+    }
+    if (stopTypingTimerRef.current) clearTimeout(stopTypingTimerRef.current)
+    stopTypingTimerRef.current = setTimeout(() => {
+      notifyStopTyping(chatId)
+      lastTypingSentRef.current = 0
+      stopTypingTimerRef.current = null
+    }, TYPING_STOP_DELAY_MS)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = text.trim()
@@ -66,6 +100,7 @@ export default function MessageInput({ onSend, disabled }: Props) {
       onSend({ type: 'text', text: trimmed })
     }
 
+    stopTyping()
     setText('')
     setPendingFile(null)
     setFileError(null)
@@ -125,8 +160,9 @@ export default function MessageInput({ onSend, disabled }: Props) {
             className={styles.input}
             placeholder={pendingFile ? 'Подпись (необязательно)…' : 'Сообщение'}
             value={text}
-            onChange={e => setText(e.target.value)}
+            onChange={handleTextChange}
             onKeyDown={handleKeyDown}
+            onBlur={stopTyping}
             disabled={disabled || uploading}
             rows={1}
           />

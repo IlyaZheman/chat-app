@@ -4,12 +4,17 @@ import { chatsApi } from '../api/chatsApi'
 import { chatHub } from '../hub/chatHub'
 import { useAuthStore } from './authStore'
 
+const TYPING_CLEAR_MS = 8000
+
 interface ChatsStore {
   chats: Chat[]
   availableGroups: Chat[]
   activeChatId: string | null
   messages: Record<string, Message[]>
   loading: boolean
+  onlineStatus: Record<string, boolean>
+  onlineCounts: Record<string, { online: number; members: number }>
+  typingUsers: Record<string, string[]>
 
   loadChats: () => Promise<void>
   loadAllGroups: () => Promise<void>
@@ -19,7 +24,11 @@ interface ChatsStore {
   openPrivateChat: (targetUserId: string) => Promise<string>
   joinGroup: (chatId: string) => Promise<void>
   initSignalR: () => void
+  notifyStartTyping: (chatId: string) => void
+  notifyStopTyping: (chatId: string) => void
 }
+
+const typingTimers: Record<string, ReturnType<typeof setTimeout>> = {}
 
 export const useChatsStore = create<ChatsStore>((set, get) => ({
   chats: [],
@@ -27,6 +36,9 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
   activeChatId: null,
   messages: {},
   loading: false,
+  onlineStatus: {},
+  onlineCounts: {},
+  typingUsers: {},
 
   initSignalR: () => {
     if (chatHub.isInitialized) return
@@ -46,12 +58,63 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
         },
       }))
     })
+
+    chatHub.onUserOnlineStatusChanged((userId, isOnline) => {
+      set(s => ({ onlineStatus: { ...s.onlineStatus, [userId]: isOnline } }))
+    })
+
+    chatHub.onGroupOnlineCountChanged((chatId, onlineCount, memberCount) => {
+      set(s => ({
+        onlineCounts: { ...s.onlineCounts, [chatId]: { online: onlineCount, members: memberCount } },
+      }))
+    })
+
+    chatHub.onUserTyping((chatId, userName, isTyping) => {
+      const timerKey = `${chatId}:${userName}`
+
+      if (isTyping) {
+        clearTimeout(typingTimers[timerKey])
+        typingTimers[timerKey] = setTimeout(() => {
+          removeTypingUser(chatId, userName)
+          delete typingTimers[timerKey]
+        }, TYPING_CLEAR_MS)
+
+        set(s => {
+          const current = s.typingUsers[chatId] ?? []
+          if (current.includes(userName)) return s
+          return { typingUsers: { ...s.typingUsers, [chatId]: [...current, userName] } }
+        })
+      } else {
+        clearTimeout(typingTimers[timerKey])
+        delete typingTimers[timerKey]
+        removeTypingUser(chatId, userName)
+      }
+    })
   },
 
   loadChats: async () => {
     set({ loading: true })
     const chats = await chatsApi.getChats()
-    set({ chats, loading: false })
+
+    const onlineStatus: Record<string, boolean> = {}
+    const onlineCounts: Record<string, { online: number; members: number }> = {}
+    for (const chat of chats) {
+      if (chat.type === 'Private' && chat.otherUserId) {
+        onlineStatus[chat.otherUserId] = chat.isOnline ?? false
+      } else if (chat.type === 'Group') {
+        onlineCounts[chat.id] = {
+          online: chat.onlineCount ?? 0,
+          members: chat.memberCount ?? 0,
+        }
+      }
+    }
+
+    set(s => ({
+      chats,
+      loading: false,
+      onlineStatus: { ...s.onlineStatus, ...onlineStatus },
+      onlineCounts: { ...s.onlineCounts, ...onlineCounts },
+    }))
   },
 
   selectChat: async (chatId) => {
@@ -115,7 +178,23 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
     await chatsApi.joinGroup(chatId)
     await get().loadChats()
   },
+
+  notifyStartTyping: (chatId) => {
+    chatHub.startTyping(chatId)
+  },
+
+  notifyStopTyping: (chatId) => {
+    chatHub.stopTyping(chatId)
+  },
 }))
+
+function removeTypingUser(chatId: string, userName: string) {
+  useChatsStore.setState(s => {
+    const current = s.typingUsers[chatId] ?? []
+    const updated = current.filter(u => u !== userName)
+    return { typingUsers: { ...s.typingUsers, [chatId]: updated } }
+  })
+}
 
 const OPTIMISTIC_PREFIX = 'optimistic-'
 const DEDUP_WINDOW_MS = 2000

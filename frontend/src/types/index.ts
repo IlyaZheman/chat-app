@@ -3,7 +3,11 @@ export interface Chat {
   type: 'Private' | 'Group'
   name: string | null
   otherUserName?: string
+  otherUserId?: string
   createdAt: string
+  memberCount?: number
+  isOnline?: boolean
+  onlineCount?: number
 }
 
 export interface User {

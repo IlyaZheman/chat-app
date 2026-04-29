@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Chat.API.Contracts.Chats;
 using Chat.API.Extensions;
 using Chat.Application.Chats;
+using Chat.Application.Interfaces;
 using Chat.Domain.Enums;
 using Chat.Infrastructure.Notifications;
 
@@ -29,19 +30,54 @@ public static class ChatsEndpoints
     private static async Task<IResult> GetUserChats(
         ClaimsPrincipal user,
         GetUserChatsHandler handler,
+        IOnlineStatusStorage onlineStorage,
         CancellationToken ct)
     {
         var userId = user.GetUserId();
         var chats = await handler.HandleAsync(userId, ct);
 
-        var response = chats.Select(c =>
+        var onlineChecks = chats.Select(c =>
+        {
+            if (c.Type == ChatType.Private)
+            {
+                var otherId = c.Members.FirstOrDefault(m => m.UserId != userId)?.UserId;
+                return otherId.HasValue
+                    ? onlineStorage.IsOnlineAsync(otherId.Value, ct).ContinueWith(t => (object)(bool)t.Result, ct)
+                    : Task.FromResult<object>(false);
+            }
+            else
+            {
+                var memberIds = c.Members.Select(m => m.UserId);
+                return onlineStorage.GetOnlineCountAsync(memberIds, ct).ContinueWith(t => (object)(int)t.Result, ct);
+            }
+        }).ToArray();
+
+        var presenceResults = await Task.WhenAll(onlineChecks);
+
+        var response = chats.Select((c, i) =>
         {
             var member = c.Members.FirstOrDefault(m => m.UserId == userId);
             var myRole = member?.Role.ToString() ?? "Member";
-            var otherUserName = c.Type == ChatType.Private
-                ? c.Members.FirstOrDefault(m => m.UserId != userId)?.UserName
-                : null;
-            return new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, myRole, otherUserName);
+            Guid? otherUserId = null;
+            string? otherUserName = null;
+            bool isOnline = false;
+            int onlineCount = 0;
+
+            if (c.Type == ChatType.Private)
+            {
+                var other = c.Members.FirstOrDefault(m => m.UserId != userId);
+                otherUserId = other?.UserId;
+                otherUserName = other?.UserName;
+                isOnline = presenceResults[i] is bool b && b;
+            }
+            else
+            {
+                onlineCount = presenceResults[i] is int n ? n : 0;
+            }
+
+            return new ChatResponse(
+                c.Id, c.Type.ToString(), c.Name, c.CreatedAt, myRole,
+                otherUserName, otherUserId, c.Members.Count, isOnline, onlineCount);
         });
 
         return Results.Ok(response);
@@ -127,7 +163,7 @@ public static class ChatsEndpoints
         var groups = await handler.HandleAsync(ct);
 
         var response = groups.Select(c =>
-            new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, null, null));
+            new ChatResponse(c.Id, c.Type.ToString(), c.Name, c.CreatedAt, null, null, null, c.Members.Count, false, 0));
 
         return Results.Ok(response);
     }

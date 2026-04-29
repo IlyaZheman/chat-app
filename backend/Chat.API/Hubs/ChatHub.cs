@@ -11,13 +11,15 @@ public class ChatHub(
     JoinChatHandler joinChatHandler,
     LeaveChatHandler leaveChatHandler,
     LeaveGroupChatHandler leaveGroupChatHandler,
-    SendMessageHandler sendMessageHandler
+    SendMessageHandler sendMessageHandler,
+    UserPresenceHandler userPresenceHandler
 ) : Hub<IChatClient>
 {
     public override async Task OnConnectedAsync()
     {
         var userId = GetUserId();
         await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
+        await userPresenceHandler.HandleConnectedAsync(userId);
         await base.OnConnectedAsync();
     }
 
@@ -45,8 +47,17 @@ public class ChatHub(
         await sendMessageHandler.HandleAsync(Context.ConnectionId, command);
     }
 
+    public async Task StartTyping(Guid chatId) =>
+        await Clients.GroupExcept(chatId.ToString(), [Context.ConnectionId])
+            .UserTyping(chatId, GetUserName(), true);
+
+    public async Task StopTyping(Guid chatId) =>
+        await Clients.GroupExcept(chatId.ToString(), [Context.ConnectionId])
+            .UserTyping(chatId, GetUserName(), false);
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        await userPresenceHandler.HandleDisconnectedAsync(GetUserId());
         await leaveChatHandler.HandleAsync(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }

@@ -6,5 +6,9 @@ public record ChatResponse(
     string? Name,
     DateTime CreatedAt,
     string? MyRole,
-    string? OtherUserName
+    string? OtherUserName,
+    Guid? OtherUserId,
+    int MemberCount,
+    bool IsOnline,
+    int OnlineCount
 );

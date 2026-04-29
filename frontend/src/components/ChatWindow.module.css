@@ -67,6 +67,27 @@
   margin-top: 1px;
 }
 
+.chatMeta.typing {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.avatarWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+
 .headerActions {
   display: flex;
   gap: 4px;

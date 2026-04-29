@@ -9,4 +9,6 @@ public interface IChatNotifier
     Task NotifyUserLeftAsync(Guid chatId, string userName, CancellationToken ct = default);
     Task NotifyChatDeletedAsync(Guid chatId, CancellationToken ct = default);
     Task NotifyNewPrivateChatAsync(Guid targetUserId, CancellationToken ct = default);
+    Task NotifyUserOnlineStatusChangedAsync(Guid userId, bool isOnline, Guid contactUserId, CancellationToken ct = default);
+    Task NotifyGroupOnlineCountAsync(Guid chatId, int onlineCount, int memberCount, CancellationToken ct = default);
 }

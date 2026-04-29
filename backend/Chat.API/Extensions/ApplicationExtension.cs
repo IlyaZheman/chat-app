@@ -26,6 +26,8 @@ public static class ApplicationExtension
         services.AddScoped<GetAllGroupsHandler>();
         services.AddScoped<JoinGroupChatHandler>();
 
+        services.AddScoped<UserPresenceHandler>();
+
         services.AddScoped<GetAllUsersHandler>();
         services.AddScoped<AssignUserRoleHandler>();
 

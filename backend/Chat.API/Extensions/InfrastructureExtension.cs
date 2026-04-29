@@ -30,9 +30,11 @@ public static class InfrastructureExtension
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString(nameof(AppDbContext))));
 
-        services.AddStackExchangeRedisCache(options =>
-            options.Configuration = configuration.GetConnectionString("Redis")
-                ?? throw new InvalidOperationException("Redis connection string is missing."));
+        var redisConn = configuration.GetConnectionString("Redis")
+            ?? throw new InvalidOperationException("Redis connection string is missing.");
+        services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(
+            _ => StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn));
+        services.AddStackExchangeRedisCache(options => options.Configuration = redisConn);
 
         services.AddCors(options =>
             options.AddDefaultPolicy(policy =>
@@ -56,6 +58,7 @@ public static class InfrastructureExtension
         services.AddScoped<IJwtProvider, JwtProvider>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IConnectionStorage, RedisConnectionStorage>();
+        services.AddScoped<IOnlineStatusStorage, RedisOnlineStatusStorage>();
 
         services.AddScoped<IChatNotifier, SignalRChatNotifier<ChatHub>>();
 

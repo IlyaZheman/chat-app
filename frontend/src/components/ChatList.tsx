@@ -38,7 +38,7 @@ function formatChatTime(iso: string | undefined): string {
 
 export default function ChatList({ onLogout, onChatOpen }: Props) {
   const auth = useAuthStore(s => s.auth)
-  const { chats, messages, activeChatId, selectChat } = useChatsStore()
+  const { chats, messages, activeChatId, selectChat, onlineStatus, typingUsers } = useChatsStore()
 
   const [showMenu, setShowMenu] = useState(false)
   const [view, setView] = useState<View>('list')
@@ -101,6 +101,15 @@ export default function ChatList({ onLogout, onChatOpen }: Props) {
         {filtered.map(({ chat, last }) => {
           const label = getChatLabel(chat)
           const isActive = activeChatId === chat.id
+          const isOnline = chat.type === 'Private' && (
+            (chat.otherUserId ? onlineStatus[chat.otherUserId] : chat.isOnline) ?? false
+          )
+          const typing = typingUsers[chat.id] ?? []
+          const typingText = typing.length === 1
+            ? `${typing[0]} печатает…`
+            : typing.length > 1
+              ? `${typing[0]}, ${typing[1]} печатают…`
+              : null
           return (
             <button
               key={chat.id}
@@ -110,17 +119,27 @@ export default function ChatList({ onLogout, onChatOpen }: Props) {
                 onChatOpen?.()
               }}
             >
-              <Avatar name={label} size={44} />
+              <div className={styles.avatarWrap}>
+                <Avatar name={label} size={44} />
+                {isOnline && <span className={styles.onlineDot} aria-hidden="true" />}
+              </div>
               <div className={styles.chatBody}>
                 <div className={styles.chatTopRow}>
                   <span className={styles.chatLabel}>{label}</span>
                   <span className={styles.chatTime}>{formatChatTime(last?.sentAt)}</span>
                 </div>
                 <div className={styles.chatPreview}>
-                  {last?.senderName && last.senderName === auth?.userName && (
-                    <span className={styles.previewYou}>Вы: </span>
-                  )}
-                  {previewText(last?.payload)}
+                  {typingText
+                    ? <span className={styles.typingPreview}>{typingText}</span>
+                    : (
+                      <>
+                        {last?.senderName && last.senderName === auth?.userName && (
+                          <span className={styles.previewYou}>Вы: </span>
+                        )}
+                        {previewText(last?.payload)}
+                      </>
+                    )
+                  }
                 </div>
               </div>
             </button>
