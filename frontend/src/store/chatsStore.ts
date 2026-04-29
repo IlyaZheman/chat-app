@@ -47,10 +47,7 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
       get().loadChats()
     })
 
-    chatHub.onReceiveMessage((senderName, payload) => {
-      const chatId = get().activeChatId
-      if (!chatId) return
-
+    chatHub.onReceiveMessage((chatId, senderName, payload) => {
       set(s => ({
         messages: {
           ...s.messages,
@@ -118,12 +115,10 @@ export const useChatsStore = create<ChatsStore>((set, get) => ({
   },
 
   selectChat: async (chatId) => {
-    if (!get().messages[chatId]) {
-      const msgs = await chatsApi.getMessages(chatId)
-      set(s => ({ messages: { ...s.messages, [chatId]: msgs } }))
-    }
     set({ activeChatId: chatId })
     await chatHub.joinChat(chatId)
+    const msgs = await chatsApi.getMessages(chatId)
+    set(s => ({ messages: { ...s.messages, [chatId]: msgs } }))
   },
 
   sendMessage: async (payload) => {

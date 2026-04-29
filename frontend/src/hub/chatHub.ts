@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import type { MessagePayload } from '../types'
 
-type MessageHandler = (userName: string, payload: MessagePayload) => void
+type MessageHandler = (chatId: string, userName: string, payload: MessagePayload) => void
 type VoidHandler = () => void
 type OnlineStatusHandler = (userId: string, isOnline: boolean) => void
 type GroupOnlineCountHandler = (chatId: string, onlineCount: number, memberCount: number) => void
@@ -31,8 +31,8 @@ class ChatHub {
       .configureLogging(signalR.LogLevel.Information)
       .build()
 
-    this.connection.on('ReceiveMessage', (userName: string, payload: MessagePayload) => {
-      this.handlers.forEach(h => h(userName, payload))
+    this.connection.on('ReceiveMessage', (chatId: string, userName: string, payload: MessagePayload) => {
+      this.handlers.forEach(h => h(chatId, userName, payload))
     })
 
     this.connection.on('NewChatCreated', () => {

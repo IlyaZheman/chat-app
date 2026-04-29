@@ -28,8 +28,11 @@ public class ChatHub(
         var userId = GetUserId();
         var userName = GetUserName();
 
+        var previousChatId = await joinChatHandler.HandleAsync(Context.ConnectionId, userId, userName, chatId);
+        if (previousChatId.HasValue && previousChatId.Value != chatId)
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, previousChatId.Value.ToString());
+
         await Groups.AddToGroupAsync(Context.ConnectionId, chatId.ToString());
-        await joinChatHandler.HandleAsync(Context.ConnectionId, userId, userName, chatId);
     }
 
     public async Task LeaveGroupChat()

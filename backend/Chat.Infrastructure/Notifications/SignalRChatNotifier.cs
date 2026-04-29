@@ -13,7 +13,7 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
     private const string UserGroupPrefix = "user-";
 
     public Task NotifyMessageAsync(Guid chatId, string senderName, MessagePayload payload, CancellationToken ct = default) =>
-        ChatGroup(chatId).ReceiveMessage(senderName, MessagePayloadDto.From(payload));
+        ChatGroup(chatId).ReceiveMessage(chatId, senderName, MessagePayloadDto.From(payload));
 
     public Task NotifyUserJoinedAsync(Guid chatId, string userName, CancellationToken ct = default) =>
         SendSystemMessageAsync(chatId, string.Format(UserJoinedMessage, userName));
@@ -34,7 +34,7 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
         ChatGroup(chatId).GroupOnlineCountChanged(chatId, onlineCount, memberCount);
 
     private Task SendSystemMessageAsync(Guid chatId, string text) =>
-        ChatGroup(chatId).ReceiveMessage(SystemSenderName, new TextPayloadDto(text));
+        ChatGroup(chatId).ReceiveMessage(chatId, SystemSenderName, new TextPayloadDto(text));
 
     private IChatClient ChatGroup(Guid chatId) =>
         hubContext.Clients.Group(chatId.ToString());

@@ -9,7 +9,7 @@ public class JoinChatHandler(
     IChatsRepository chatsRepository,
     IConnectionStorage connectionStorage)
 {
-    public async Task HandleAsync(
+    public async Task<Guid?> HandleAsync(
         string connectionId,
         Guid userId,
         string userName,
@@ -22,7 +22,9 @@ public class JoinChatHandler(
         if (!await chatsRepository.IsMemberAsync(chatId, userId, ct))
             throw new ForbiddenException("User is not a member of this chat.");
 
+        var previous = await connectionStorage.GetAsync(connectionId, ct);
         var connection = new UserConnection(userId, userName, chatId);
         await connectionStorage.SaveAsync(connectionId, connection, ct);
+        return previous?.ChatId;
     }
 }
