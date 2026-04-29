@@ -42,14 +42,12 @@ public static class ChatsEndpoints
             {
                 var otherId = c.Members.FirstOrDefault(m => m.UserId != userId)?.UserId;
                 return otherId.HasValue
-                    ? onlineStorage.IsOnlineAsync(otherId.Value, ct).ContinueWith(t => (object)(bool)t.Result, ct)
+                    ? onlineStorage.IsOnlineAsync(otherId.Value, ct).ContinueWith(t => (object)t.Result, ct)
                     : Task.FromResult<object>(false);
             }
-            else
-            {
-                var memberIds = c.Members.Select(m => m.UserId);
-                return onlineStorage.GetOnlineCountAsync(memberIds, ct).ContinueWith(t => (object)(int)t.Result, ct);
-            }
+
+            var memberIds = c.Members.Select(m => m.UserId);
+            return onlineStorage.GetOnlineCountAsync(memberIds, ct).ContinueWith(t => (object)t.Result, ct);
         }).ToArray();
 
         var presenceResults = await Task.WhenAll(onlineChecks);
@@ -60,8 +58,8 @@ public static class ChatsEndpoints
             var myRole = member?.Role.ToString() ?? "Member";
             Guid? otherUserId = null;
             string? otherUserName = null;
-            bool isOnline = false;
-            int onlineCount = 0;
+            var isOnline = false;
+            var onlineCount = 0;
 
             if (c.Type == ChatType.Private)
             {
@@ -178,5 +176,4 @@ public static class ChatsEndpoints
         await handler.HandleAsync(chatId, userId, ct);
         return Results.Ok();
     }
-
 }

@@ -15,7 +15,9 @@ using Chat.Infrastructure.Security;
 using Chat.Infrastructure.Storage;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace Chat.API.Extensions;
 
@@ -31,16 +33,16 @@ public static class InfrastructureExtension
             options.UseNpgsql(configuration.GetConnectionString(nameof(AppDbContext))));
 
         var redisConn = configuration.GetConnectionString("Redis")
-            ?? throw new InvalidOperationException("Redis connection string is missing.");
-        services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(
-            _ => StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn));
+                        ?? throw new InvalidOperationException("Redis connection string is missing.");
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(redisConn));
         services.AddStackExchangeRedisCache(options => options.Configuration = redisConn);
 
         services.AddCors(options =>
             options.AddDefaultPolicy(policy =>
             {
                 var origin = configuration.GetConnectionString("Cors")
-                    ?? throw new InvalidOperationException("Cors origin is missing.");
+                             ?? throw new InvalidOperationException("Cors origin is missing.");
                 policy.WithOrigins(origin)
                     .AllowAnyHeader()
                     .AllowAnyMethod()
@@ -48,7 +50,7 @@ public static class InfrastructureExtension
             }));
 
         var enumConverter = new JsonStringEnumConverter(JsonNamingPolicy.CamelCase);
-        services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(o =>
+        services.Configure<JsonOptions>(o =>
             o.SerializerOptions.Converters.Add(enumConverter));
         services.AddSignalR().AddJsonProtocol(o =>
             o.PayloadSerializerOptions.Converters.Add(enumConverter));
@@ -66,7 +68,7 @@ public static class InfrastructureExtension
             o.MultipartBodyLengthLimit = 10 * 1024 * 1024 + 4096);
 
         var minioOptions = configuration.GetSection("Minio").Get<MinioOptions>()
-            ?? throw new InvalidOperationException("Minio configuration is missing.");
+                           ?? throw new InvalidOperationException("Minio configuration is missing.");
         services.Configure<MinioOptions>(configuration.GetSection("Minio"));
         services.AddSingleton<IAmazonS3>(_ => new AmazonS3Client(
             new BasicAWSCredentials(minioOptions.AccessKey, minioOptions.SecretKey),
