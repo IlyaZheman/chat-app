@@ -64,6 +64,22 @@
   color: var(--danger);
 }
 
+.editBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px 0;
+  font-size: 13px;
+  color: var(--accent-hi);
+}
+
+.editBannerText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .fileInput {
   display: none;
 }

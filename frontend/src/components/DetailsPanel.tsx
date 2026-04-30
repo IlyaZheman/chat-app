@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { useChatsStore } from '../store/chatsStore'
+import { useMessagesStore } from '../store/useMessagesStore'
+import { useChatsListStore } from '../store/useChatsListStore'
+import { useToastStore } from '../store/toastStore'
 import { Avatar } from './Avatar'
 import { Icon } from './chatIcons'
 import ImageLightbox from './ImageLightbox'
@@ -17,9 +19,31 @@ interface MediaItem {
   fileSize?: number
 }
 
+const FAR_FUTURE = '9999-12-31T00:00:00Z'
+
+function isMuted(mutedUntil?: string | null): boolean {
+  return mutedUntil != null && new Date(mutedUntil) > new Date()
+}
+
 export default function DetailsPanel({ chat, onClose }: Props) {
-  const messages = useChatsStore(s => s.messages)
+  const messages = useMessagesStore(s => s.messages)
+  const muteChat = useChatsListStore(s => s.muteChat)
+  const showToast = useToastStore(s => s.show)
   const [lightbox, setLightbox] = useState<MediaItem | null>(null)
+  const [muting, setMuting] = useState(false)
+
+  const muted = isMuted(chat.mutedUntil)
+
+  const handleToggleMute = async () => {
+    setMuting(true)
+    try {
+      await muteChat(chat.id, muted ? null : FAR_FUTURE)
+    } catch {
+      showToast(muted ? 'Не удалось включить уведомления' : 'Не удалось отключить уведомления')
+    } finally {
+      setMuting(false)
+    }
+  }
 
   const mediaItems = useMemo<MediaItem[]>(() => {
     const list = messages[chat.id] ?? []
@@ -30,8 +54,12 @@ export default function DetailsPanel({ chat, onClose }: Props) {
     )
   }, [chat, messages])
 
-  const title = chat.type === 'Group' ? (chat.name ?? 'Группа') : (chat.otherUserName ?? 'Личное')
-  const subtitle = chat.type === 'Group' ? 'Группа' : 'Личный чат'
+  const title = chat.type === 'Group' ? (chat.name ?? 'Группа')
+    : chat.type === 'Channel' ? (chat.name ?? 'Канал')
+    : (chat.otherUserName ?? 'Личное')
+  const subtitle = chat.type === 'Group' ? 'Группа'
+    : chat.type === 'Channel' ? 'Канал'
+    : 'Личный чат'
 
   const recentMedia = mediaItems.slice(-6).reverse()
 
@@ -48,15 +76,15 @@ export default function DetailsPanel({ chat, onClose }: Props) {
       </button>
       <div className={styles.scroll}>
         <div className={styles.header}>
-          <Avatar name={title} size={88} />
+          <Avatar name={title} size={88} src={chat.type === 'Private' ? chat.otherUserAvatarUrl : undefined} />
           <h2 className={styles.title}>{title}</h2>
           <p className={styles.subtitle}>{subtitle}</p>
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.actionPill}>
-            <Icon.Bell size={16} />
-            <span>Звук</span>
+          <button className={styles.actionPill} onClick={handleToggleMute} disabled={muting}>
+            {muted ? <Icon.BellOff size={16} /> : <Icon.Bell size={16} />}
+            <span>{muted ? 'Включить' : 'Выключить'}</span>
           </button>
           <button className={styles.actionPill}>
             <Icon.Search size={16} />

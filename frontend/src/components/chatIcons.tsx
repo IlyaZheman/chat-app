@@ -135,9 +135,43 @@ export const Icon = {
       <path d="M20 6 9 17l-5-5" />
     </svg>
   ),
+  CheckDouble: ({ size = 18, ...rest }: IconProps) => (
+    <svg {...base(size)} {...rest}>
+      <path d="M2 12 7 17l9-9" />
+      <path d="m12 17 9-9" />
+    </svg>
+  ),
+  Edit: ({ size = 18, ...rest }: IconProps) => (
+    <svg {...base(size)} {...rest}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  ),
+  BellOff: ({ size = 18, ...rest }: IconProps) => (
+    <svg {...base(size)} {...rest}>
+      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+      <path d="M18.6 14a8.3 8.3 0 0 1-.6-3.4V8a6 6 0 0 0-9.6-4.8" />
+      <path d="M18 8a6 6 0 0 0-.6-2.6" />
+      <path d="M2 2l20 20" />
+      <path d="M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14" />
+    </svg>
+  ),
+  Clock: ({ size = 18, ...rest }: IconProps) => (
+    <svg {...base(size)} {...rest}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </svg>
+  ),
   ChevronRight: ({ size = 18, ...rest }: IconProps) => (
     <svg {...base(size)} {...rest}>
       <path d="m9 18 6-6-6-6" />
+    </svg>
+  ),
+  Channel: ({ size = 18, ...rest }: IconProps) => (
+    <svg {...base(size)} {...rest}>
+      <path d="M11 5 6 9H2v6h4l5 4V5z" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+      <path d="M19 5a10 10 0 0 1 0 14" />
     </svg>
   ),
   Compass: ({ size = 18, ...rest }: IconProps) => (

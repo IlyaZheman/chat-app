@@ -25,7 +25,14 @@ public class SendMessageHandler(
         await chatsRepository.AddMessageAsync(message, ct);
         await chatsRepository.SaveChangesAsync(ct);
 
-        await notifier.NotifyMessageAsync(connection.ChatId, connection.UserName, command.Payload, ct);
+        await notifier.NotifyMessageAsync(connection.ChatId, message.Id, connection.UserName, connection.AvatarUrl, message.SentAt, command.Payload, ct);
+
+        var chat = await chatsRepository.GetByIdAsync(connection.ChatId, ct);
+        if (chat is not null)
+        {
+            var otherIds = chat.Members.Select(m => m.UserId).Where(id => id != connection.UserId);
+            await notifier.NotifyUnreadIncrementAsync(connection.ChatId, otherIds, message.Id, connection.UserName, connection.AvatarUrl, message.SentAt, command.Payload, ct);
+        }
     }
 
     private static void EnsureNotEmpty(MessagePayload payload)

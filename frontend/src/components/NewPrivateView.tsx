@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useChatsStore } from '../store/chatsStore'
+import { useChatsListStore } from '../store/useChatsListStore'
+import { useToastStore } from '../store/toastStore'
 import { usersApi } from '../api/usersApi'
 import type { User } from '../types'
 import { Icon } from './chatIcons'
@@ -12,13 +13,14 @@ interface Props {
 }
 
 export default function NewPrivateView({ onBack, onCreated }: Props) {
-  const openPrivateChat = useChatsStore(s => s.openPrivateChat)
+  const openPrivateChat = useChatsListStore(s => s.openPrivateChat)
+  const showToast = useToastStore(s => s.show)
   const [users, setUsers] = useState<User[]>([])
   const [search, setSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    usersApi.getUsers().then(setUsers)
+    usersApi.getUsers().then(setUsers).catch(() => showToast('Не удалось загрузить список пользователей'))
   }, [])
 
   const handleSelect = async (user: User) => {
@@ -26,6 +28,8 @@ export default function NewPrivateView({ onBack, onCreated }: Props) {
     try {
       const chatId = await openPrivateChat(user.id)
       onCreated(chatId)
+    } catch {
+      showToast('Не удалось открыть чат')
     } finally {
       setSubmitting(false)
     }

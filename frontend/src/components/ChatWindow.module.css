@@ -7,6 +7,19 @@
   background: var(--bg);
 }
 
+.readOnlyNotice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted, #888);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
 /* ── Header ── */
 
 .header {
@@ -133,6 +146,13 @@
 
 /* ── Messages ── */
 
+.loadingMore {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-mute);
+  padding: 8px 0 4px;
+}
+
 .messages {
   flex: 1;
   overflow-y: auto;
@@ -188,13 +208,38 @@
   margin: 12px 0;
 }
 
+.unreadDivider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-fg, var(--accent));
+}
+
+.unreadDivider::before,
+.unreadDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--accent-soft, var(--border));
+}
+
+.unreadDivider span {
+  white-space: nowrap;
+  padding: 2px 4px;
+}
+
 /* ── Message rows ── */
 
 .msgRow {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 70%;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
   margin-top: 14px;
   animation: msgIn 0.18s var(--ease);
 }
@@ -204,13 +249,37 @@
 }
 
 .msgRow.own {
-  align-self: flex-end;
-  align-items: flex-end;
+  justify-content: flex-end;
 }
 
 @keyframes msgIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+.msgAvatarCol {
+  flex-shrink: 0;
+  width: 28px;
+  align-self: flex-end;
+  padding-bottom: 2px;
+}
+
+.msgAvatarSpacer {
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+.msgBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 70%;
+  min-width: 0;
+}
+
+.msgBodyOwn {
+  align-items: flex-end;
 }
 
 .senderName {
@@ -232,6 +301,7 @@
   gap: 10px;
   max-width: 100%;
   box-shadow: var(--shadow-sm);
+  user-select: text;
 }
 
 .own .bubble {
@@ -304,10 +374,85 @@
   align-self: flex-end;
   margin-bottom: 1px;
   font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .own .bubbleTime {
   color: rgba(255, 255, 255, 0.75);
+}
+
+.editedTag {
+  font-size: 10px;
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.pendingMark {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  opacity: 0.6;
+}
+
+.readMark {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
+.readMark.readDouble {
+  color: #5fc4ff;
+}
+
+.own .readMark.readDouble {
+  color: #d8efff;
+}
+
+.bubbleMenu {
+  z-index: 30;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md, 0 6px 18px rgba(0, 0, 0, 0.18));
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.bubbleMenuItem {
+  background: transparent;
+  border: none;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+
+.bubbleMenuItem:hover {
+  background: var(--surface-2);
+}
+
+.bubbleMenuItem.danger {
+  color: var(--danger);
+}
+
+.bubbleMenuItem.danger:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.menuBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
 }
 
 /* ── Mobile ── */

@@ -19,7 +19,7 @@ public class ChatHub(
     {
         var userId = GetUserId();
         await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
-        await userPresenceHandler.HandleConnectedAsync(userId);
+        await userPresenceHandler.HandleConnectedAsync(userId, Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
@@ -60,7 +60,7 @@ public class ChatHub(
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await userPresenceHandler.HandleDisconnectedAsync(GetUserId());
+        await userPresenceHandler.HandleDisconnectedAsync(GetUserId(), Context.ConnectionId);
         await leaveChatHandler.HandleAsync(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }

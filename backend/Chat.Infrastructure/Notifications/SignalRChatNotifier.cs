@@ -12,8 +12,28 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
     private const string UserLeftMessage = "{0} покинул чат";
     private const string UserGroupPrefix = "user-";
 
-    public Task NotifyMessageAsync(Guid chatId, string senderName, MessagePayload payload, CancellationToken ct = default) =>
-        ChatGroup(chatId).ReceiveMessage(chatId, senderName, MessagePayloadDto.From(payload));
+    public Task NotifyMessageAsync(Guid chatId, Guid messageId, string senderName, string? senderAvatarUrl, DateTime sentAt, MessagePayload payload, CancellationToken ct = default) =>
+        ChatGroup(chatId).ReceiveMessage(chatId, messageId, senderName, senderAvatarUrl, sentAt, MessagePayloadDto.From(payload));
+
+    public Task NotifyUnreadIncrementAsync(Guid chatId, IEnumerable<Guid> memberIds, Guid messageId, string senderName, string? senderAvatarUrl, DateTime sentAt, MessagePayload payload, CancellationToken ct = default) =>
+        Task.WhenAll(memberIds.Select(id =>
+            hubContext.Clients.Group($"{UserGroupPrefix}{id}").UnreadCountIncremented(chatId, messageId, senderName, senderAvatarUrl, sentAt, MessagePayloadDto.From(payload))));
+
+    public Task NotifyMessageUpdatedAsync(Guid chatId, IEnumerable<Guid> memberIds, Message message, CancellationToken ct = default)
+    {
+        var dto = MessagePayloadDto.From(message.Payload);
+        var editedAt = message.EditedAt ?? DateTime.UtcNow;
+        return Task.WhenAll(memberIds.Select(id =>
+            hubContext.Clients.Group($"{UserGroupPrefix}{id}").MessageUpdated(chatId, message.Id, dto, editedAt)));
+    }
+
+    public Task NotifyMessageDeletedAsync(Guid chatId, IEnumerable<Guid> memberIds, Guid messageId, DateTime deletedAt, CancellationToken ct = default) =>
+        Task.WhenAll(memberIds.Select(id =>
+            hubContext.Clients.Group($"{UserGroupPrefix}{id}").MessageDeleted(chatId, messageId, deletedAt)));
+
+    public Task NotifyMessageReadAsync(Guid chatId, IEnumerable<Guid> memberIds, Guid userId, DateTime lastReadAt, CancellationToken ct = default) =>
+        Task.WhenAll(memberIds.Select(id =>
+            hubContext.Clients.Group($"{UserGroupPrefix}{id}").MessageRead(chatId, userId, lastReadAt)));
 
     public Task NotifyUserJoinedAsync(Guid chatId, string userName, CancellationToken ct = default) =>
         SendSystemMessageAsync(chatId, string.Format(UserJoinedMessage, userName));
@@ -21,8 +41,9 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
     public Task NotifyUserLeftAsync(Guid chatId, string userName, CancellationToken ct = default) =>
         SendSystemMessageAsync(chatId, string.Format(UserLeftMessage, userName));
 
-    public Task NotifyChatDeletedAsync(Guid chatId, CancellationToken ct = default) =>
-        ChatGroup(chatId).ChatDeleted(chatId);
+    public Task NotifyChatDeletedAsync(Guid chatId, IEnumerable<Guid> memberIds, CancellationToken ct = default) =>
+        Task.WhenAll(memberIds.Select(id =>
+            hubContext.Clients.Group($"{UserGroupPrefix}{id}").ChatDeleted(chatId)));
 
     public Task NotifyNewPrivateChatAsync(Guid targetUserId, CancellationToken ct = default) =>
         hubContext.Clients.Group($"{UserGroupPrefix}{targetUserId}").NewChatCreated();
@@ -34,7 +55,7 @@ public class SignalRChatNotifier<THub>(IHubContext<THub, IChatClient> hubContext
         ChatGroup(chatId).GroupOnlineCountChanged(chatId, onlineCount, memberCount);
 
     private Task SendSystemMessageAsync(Guid chatId, string text) =>
-        ChatGroup(chatId).ReceiveMessage(chatId, SystemSenderName, new TextPayloadDto(text));
+        ChatGroup(chatId).ReceiveMessage(chatId, Guid.NewGuid(), SystemSenderName, null, DateTime.UtcNow, new TextPayloadDto(text));
 
     private IChatClient ChatGroup(Guid chatId) =>
         hubContext.Clients.Group(chatId.ToString());

@@ -1,11 +1,16 @@
 import * as signalR from '@microsoft/signalr'
 import type { MessagePayload } from '../types'
 
-type MessageHandler = (chatId: string, userName: string, payload: MessagePayload) => void
+type MessageHandler = (chatId: string, messageId: string, userName: string, senderAvatarUrl: string | null, sentAt: string, payload: MessagePayload) => void
+type UnreadCountIncrementedHandler = (chatId: string, messageId: string, senderName: string, senderAvatarUrl: string | null, sentAt: string, payload: MessagePayload) => void
+type MessageUpdatedHandler = (chatId: string, messageId: string, payload: MessagePayload, editedAt: string) => void
+type MessageDeletedHandler = (chatId: string, messageId: string, deletedAt: string) => void
+type MessageReadHandler = (chatId: string, userId: string, lastReadAt: string) => void
 type VoidHandler = () => void
 type OnlineStatusHandler = (userId: string, isOnline: boolean) => void
 type GroupOnlineCountHandler = (chatId: string, onlineCount: number, memberCount: number) => void
 type TypingHandler = (chatId: string, userName: string, isTyping: boolean) => void
+type ChatDeletedHandler = (chatId: string) => void
 
 class ChatHub {
   private readonly handlers: Set<MessageHandler> = new Set()
@@ -13,6 +18,12 @@ class ChatHub {
   private readonly onlineStatusHandlers: Set<OnlineStatusHandler> = new Set()
   private readonly groupOnlineCountHandlers: Set<GroupOnlineCountHandler> = new Set()
   private readonly typingHandlers: Set<TypingHandler> = new Set()
+  private readonly unreadCountIncrementedHandlers: Set<UnreadCountIncrementedHandler> = new Set()
+  private readonly messageUpdatedHandlers: Set<MessageUpdatedHandler> = new Set()
+  private readonly messageDeletedHandlers: Set<MessageDeletedHandler> = new Set()
+  private readonly messageReadHandlers: Set<MessageReadHandler> = new Set()
+  private readonly reconnectedHandlers: Set<VoidHandler> = new Set()
+  private readonly chatDeletedHandlers: Set<ChatDeletedHandler> = new Set()
   private connection: signalR.HubConnection | null = null
   private initialized = false
 
@@ -31,8 +42,24 @@ class ChatHub {
       .configureLogging(signalR.LogLevel.Information)
       .build()
 
-    this.connection.on('ReceiveMessage', (chatId: string, userName: string, payload: MessagePayload) => {
-      this.handlers.forEach(h => h(chatId, userName, payload))
+    this.connection.on('ReceiveMessage', (chatId: string, messageId: string, userName: string, senderAvatarUrl: string | null, sentAt: string, payload: MessagePayload) => {
+      this.handlers.forEach(h => h(chatId, messageId, userName, senderAvatarUrl, sentAt, payload))
+    })
+
+    this.connection.on('UnreadCountIncremented', (chatId: string, messageId: string, senderName: string, senderAvatarUrl: string | null, sentAt: string, payload: MessagePayload) => {
+      this.unreadCountIncrementedHandlers.forEach(h => h(chatId, messageId, senderName, senderAvatarUrl, sentAt, payload))
+    })
+
+    this.connection.on('MessageUpdated', (chatId: string, messageId: string, payload: MessagePayload, editedAt: string) => {
+      this.messageUpdatedHandlers.forEach(h => h(chatId, messageId, payload, editedAt))
+    })
+
+    this.connection.on('MessageDeleted', (chatId: string, messageId: string, deletedAt: string) => {
+      this.messageDeletedHandlers.forEach(h => h(chatId, messageId, deletedAt))
+    })
+
+    this.connection.on('MessageRead', (chatId: string, userId: string, lastReadAt: string) => {
+      this.messageReadHandlers.forEach(h => h(chatId, userId, lastReadAt))
     })
 
     this.connection.on('NewChatCreated', () => {
@@ -51,6 +78,14 @@ class ChatHub {
       this.typingHandlers.forEach(h => h(chatId, userName, isTyping))
     })
 
+    this.connection.on('ChatDeleted', (chatId: string) => {
+      this.chatDeletedHandlers.forEach(h => h(chatId))
+    })
+
+    this.connection.onreconnected(() => {
+      this.reconnectedHandlers.forEach(h => h())
+    })
+
     await this.connection.start()
   }
 
@@ -61,6 +96,12 @@ class ChatHub {
     this.onlineStatusHandlers.clear()
     this.groupOnlineCountHandlers.clear()
     this.typingHandlers.clear()
+    this.unreadCountIncrementedHandlers.clear()
+    this.messageUpdatedHandlers.clear()
+    this.messageDeletedHandlers.clear()
+    this.messageReadHandlers.clear()
+    this.reconnectedHandlers.clear()
+    this.chatDeletedHandlers.clear()
     await this.connection?.stop()
     this.connection = null
   }
@@ -124,6 +165,54 @@ class ChatHub {
 
   offUserTyping(handler: TypingHandler) {
     this.typingHandlers.delete(handler)
+  }
+
+  onUnreadCountIncremented(handler: UnreadCountIncrementedHandler) {
+    this.unreadCountIncrementedHandlers.add(handler)
+  }
+
+  offUnreadCountIncremented(handler: UnreadCountIncrementedHandler) {
+    this.unreadCountIncrementedHandlers.delete(handler)
+  }
+
+  onMessageUpdated(handler: MessageUpdatedHandler) {
+    this.messageUpdatedHandlers.add(handler)
+  }
+
+  offMessageUpdated(handler: MessageUpdatedHandler) {
+    this.messageUpdatedHandlers.delete(handler)
+  }
+
+  onMessageDeleted(handler: MessageDeletedHandler) {
+    this.messageDeletedHandlers.add(handler)
+  }
+
+  offMessageDeleted(handler: MessageDeletedHandler) {
+    this.messageDeletedHandlers.delete(handler)
+  }
+
+  onMessageRead(handler: MessageReadHandler) {
+    this.messageReadHandlers.add(handler)
+  }
+
+  offMessageRead(handler: MessageReadHandler) {
+    this.messageReadHandlers.delete(handler)
+  }
+
+  onReconnected(handler: VoidHandler) {
+    this.reconnectedHandlers.add(handler)
+  }
+
+  offReconnected(handler: VoidHandler) {
+    this.reconnectedHandlers.delete(handler)
+  }
+
+  onChatDeleted(handler: ChatDeletedHandler) {
+    this.chatDeletedHandlers.add(handler)
+  }
+
+  offChatDeleted(handler: ChatDeletedHandler) {
+    this.chatDeletedHandlers.delete(handler)
   }
 }
 

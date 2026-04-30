@@ -5,10 +5,14 @@ const api = axios.create({
   withCredentials: true,
 })
 
+const AUTH_ENDPOINTS = ['/login', '/register', '/logout']
+
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const url: string | undefined = err.config?.url
+    const isAuthEndpoint = url ? AUTH_ENDPOINTS.some(p => url.endsWith(p)) : false
+    if (err.response?.status === 401 && !isAuthEndpoint) {
       import('../store/authStore').then(({ useAuthStore }) => {
         useAuthStore.getState().clearAuth()
       })

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useChatsStore } from '../store/chatsStore'
+import { resetChatsStore } from '../store/chatsStore'
+import { initSignalR } from '../store/signalRInit'
+import { useChatsListStore } from '../store/useChatsListStore'
+import { useMessagesStore } from '../store/useMessagesStore'
 import { useAuthStore } from '../store/authStore'
 import { chatHub } from '../hub/chatHub'
 import { usersApi } from '../api/usersApi'
@@ -10,10 +13,13 @@ import DetailsPanel from '../components/DetailsPanel'
 import { Icon } from '../components/chatIcons'
 import styles from './ChatsPage.module.css'
 
+const BASE_TITLE = 'Chat'
+
 export default function ChatsPage() {
   const navigate = useNavigate()
   const { setAuth, clearAuth } = useAuthStore()
-  const { chats, activeChatId, loadChats } = useChatsStore()
+  const { chats, loadChats } = useChatsListStore()
+  const activeChatId = useMessagesStore(s => s.activeChatId)
 
   const activeChat = chats.find(c => c.id === activeChatId) ?? null
 
@@ -32,6 +38,12 @@ export default function ChatsPage() {
   const detailsVisible = detailsOpen && !!activeChat
 
   useEffect(() => {
+    const totalUnread = chats.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0)
+    document.title = totalUnread > 0 ? `(${totalUnread > 99 ? '99+' : totalUnread}) ${BASE_TITLE}` : BASE_TITLE
+    return () => { document.title = BASE_TITLE }
+  }, [chats])
+
+  useEffect(() => {
     const init = async () => {
       try {
         const freshAuth = await usersApi.me()
@@ -42,7 +54,7 @@ export default function ChatsPage() {
         return
       }
 
-      useChatsStore.getState().initSignalR()
+      initSignalR()
 
       if (!chatHub.isConnected) {
         await chatHub.connect()
@@ -55,7 +67,13 @@ export default function ChatsPage() {
   }, [])
 
   const handleLogout = async () => {
+    try {
+      await usersApi.logout()
+    } catch {
+      /* server-side cookie already gone or unreachable; proceed locally */
+    }
     await chatHub.disconnect()
+    resetChatsStore()
     clearAuth()
     navigate('/login')
   }

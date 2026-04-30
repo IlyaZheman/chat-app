@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -16,6 +17,7 @@ using Chat.Infrastructure.Storage;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -44,10 +46,24 @@ public static class InfrastructureExtension
                 var origin = configuration.GetConnectionString("Cors")
                              ?? throw new InvalidOperationException("Cors origin is missing.");
                 policy.WithOrigins(origin)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
+                    .WithHeaders("Content-Type", "X-Requested-With")
+                    .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                     .AllowCredentials();
             }));
+
+        services.AddRateLimiter(options =>
+        {
+            options.AddPolicy("login", context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                    }));
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
 
         var enumConverter = new JsonStringEnumConverter(JsonNamingPolicy.CamelCase);
         services.Configure<JsonOptions>(o =>
@@ -61,6 +77,9 @@ public static class InfrastructureExtension
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IConnectionStorage, RedisConnectionStorage>();
         services.AddScoped<IOnlineStatusStorage, RedisOnlineStatusStorage>();
+
+        services.AddSingleton<IOfflineDebouncer, OfflineDebouncer>();
+        services.AddHostedService<OnlinePresenceHeartbeatService>();
 
         services.AddScoped<IChatNotifier, SignalRChatNotifier<ChatHub>>();
 
@@ -87,7 +106,14 @@ public static class InfrastructureExtension
     {
         app.UseMiddleware<ExceptionMiddleware>();
         app.UseHttpsRedirection();
+
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHsts();
+        }
+
         app.UseCors();
+        app.UseRateLimiter();
         app.UseCookiePolicy(new CookiePolicyOptions
         {
             MinimumSameSitePolicy = SameSiteMode.Strict,

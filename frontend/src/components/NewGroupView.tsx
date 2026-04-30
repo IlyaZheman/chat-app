@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useChatsStore } from '../store/chatsStore'
+import { useChatsListStore } from '../store/useChatsListStore'
+import { useToastStore } from '../store/toastStore'
 import { Icon } from './chatIcons'
 import styles from './ChatList.module.css'
 
@@ -9,7 +10,8 @@ interface Props {
 }
 
 export default function NewGroupView({ onBack, onCreated }: Props) {
-  const createGroup = useChatsStore(s => s.createGroup)
+  const createGroup = useChatsListStore(s => s.createGroup)
+  const showToast = useToastStore(s => s.show)
   const [groupName, setGroupName] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -21,6 +23,8 @@ export default function NewGroupView({ onBack, onCreated }: Props) {
     try {
       const chatId = await createGroup(trimmed)
       onCreated(chatId)
+    } catch {
+      showToast('Не удалось создать группу')
     } finally {
       setSubmitting(false)
     }

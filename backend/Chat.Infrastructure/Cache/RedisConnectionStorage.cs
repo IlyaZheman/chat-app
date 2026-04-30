@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Chat.Application.Interfaces;
-using Chat.Domain.ValueObjects;
+using Chat.Application.Models;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Chat.Infrastructure.Cache;

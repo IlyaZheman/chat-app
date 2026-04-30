@@ -11,13 +11,13 @@ public class JoinGroupChatHandler(IChatsRepository chatsRepository)
         var chat = await chatsRepository.GetByIdAsync(chatId, ct)
             ?? throw new NotFoundException($"Chat '{chatId}' not found.");
 
-        if (chat.Type != ChatType.Group)
+        if (chat.Type == ChatType.Private)
             throw new ForbiddenException("Cannot join a private chat.");
 
         if (await chatsRepository.IsMemberAsync(chatId, userId, ct))
             throw new ConflictException("Already a member of this chat.");
 
-        await chatsRepository.AddMemberAsync(chatId, userId, ct);
+        await chatsRepository.AddMemberAsync(chatId, userId, chat.DefaultMemberRoleId, ct);
         await chatsRepository.SaveChangesAsync(ct);
     }
 }

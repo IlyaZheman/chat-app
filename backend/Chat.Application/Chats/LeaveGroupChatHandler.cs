@@ -22,14 +22,13 @@ public class LeaveGroupChatHandler(
         var chat = await chatsRepository.GetByIdAsync(connection.ChatId, ct)
             ?? throw new NotFoundException($"Chat '{connection.ChatId}' not found.");
 
-        if (chat.Type != ChatType.Group)
+        if (chat.Type == ChatType.Private)
             throw new ForbiddenException("Cannot leave a private chat.");
 
         if (!await chatsRepository.IsMemberAsync(connection.ChatId, userId, ct))
             throw new ForbiddenException("User is not a member of this chat.");
 
-        var role = await chatsRepository.GetMemberRoleAsync(connection.ChatId, userId, ct);
-        if (role == ChatMemberRole.Owner)
+        if (chat.OwnerId == userId)
             throw new ForbiddenException("The owner cannot leave the chat. Delete the chat instead.");
 
         await chatsRepository.RemoveMemberAsync(connection.ChatId, userId, ct);

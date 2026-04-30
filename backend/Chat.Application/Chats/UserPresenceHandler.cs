@@ -7,21 +7,30 @@ namespace Chat.Application.Chats;
 public class UserPresenceHandler(
     IOnlineStatusStorage onlineStorage,
     IChatsRepository chatsRepository,
-    IChatNotifier chatNotifier)
+    IChatNotifier chatNotifier,
+    IOfflineDebouncer offlineDebouncer)
 {
-    public async Task HandleConnectedAsync(Guid userId, CancellationToken ct = default)
+    public async Task HandleConnectedAsync(Guid userId, string connectionId, CancellationToken ct = default)
     {
-        var isFirstConnection = await onlineStorage.SetOnlineAsync(userId, ct);
+        offlineDebouncer.CancelPending(userId);
+
+        var isFirstConnection = await onlineStorage.AddConnectionAsync(userId, connectionId, ct);
         if (!isFirstConnection) return;
 
         await NotifyPresenceChangedAsync(userId, isOnline: true, ct);
     }
 
-    public async Task HandleDisconnectedAsync(Guid userId, CancellationToken ct = default)
+    public async Task HandleDisconnectedAsync(Guid userId, string connectionId, CancellationToken ct = default)
     {
-        var isFullyOffline = await onlineStorage.SetOfflineAsync(userId, ct);
+        var isFullyOffline = await onlineStorage.RemoveConnectionAsync(userId, connectionId, ct);
         if (!isFullyOffline) return;
 
+        offlineDebouncer.ScheduleOffline(userId);
+    }
+
+    public async Task ProcessPendingOfflineAsync(Guid userId, CancellationToken ct = default)
+    {
+        if (await onlineStorage.IsOnlineAsync(userId, ct)) return;
         await NotifyPresenceChangedAsync(userId, isOnline: false, ct);
     }
 

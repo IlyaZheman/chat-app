@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useChatsStore } from '../store/chatsStore'
+
+import { useChatsListStore } from '../store/useChatsListStore'
+import { useToastStore } from '../store/toastStore'
 import { Icon } from './chatIcons'
 import { Avatar } from './Avatar'
 import styles from './ChatList.module.css'
@@ -10,7 +12,8 @@ interface Props {
 }
 
 export default function BrowseGroupsView({ onBack, onJoined }: Props) {
-  const { chats, availableGroups, loadAllGroups, joinGroup } = useChatsStore()
+  const { chats, availableGroups, loadAllGroups, joinGroup } = useChatsListStore()
+  const showToast = useToastStore(s => s.show)
   const [search, setSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -28,6 +31,8 @@ export default function BrowseGroupsView({ onBack, onJoined }: Props) {
     try {
       await joinGroup(chatId)
       onJoined(chatId)
+    } catch {
+      showToast('Не удалось вступить в группу')
     } finally {
       setSubmitting(false)
     }

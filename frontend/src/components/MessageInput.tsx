@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MessagePayload } from '../types'
 import { uploadsApi } from '../api/uploadsApi'
-import { useChatsStore } from '../store/chatsStore'
+import { usePresenceStore } from '../store/usePresenceStore'
 import { Icon } from './chatIcons'
 import styles from './MessageInput.module.css'
 
@@ -9,19 +9,28 @@ const MAX_SIZE = 10 * 1024 * 1024
 const TYPING_THROTTLE_MS = 3000
 const TYPING_STOP_DELAY_MS = 5000
 
+interface EditTarget {
+  messageId: string
+  initialText: string
+}
+
 interface Props {
   onSend: (payload: MessagePayload) => void
   chatId?: string
   disabled?: boolean
+  editTarget?: EditTarget | null
+  onCancelEdit?: () => void
+  onSubmitEdit?: (messageId: string, text: string) => Promise<void> | void
 }
 
-export default function MessageInput({ onSend, chatId, disabled }: Props) {
+export default function MessageInput({ onSend, chatId, disabled, editTarget, onCancelEdit, onSubmitEdit }: Props) {
   const [text, setText] = useState('')
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { notifyStartTyping, notifyStopTyping } = useChatsStore()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { notifyStartTyping, notifyStopTyping } = usePresenceStore()
   const lastTypingSentRef = useRef<number>(0)
   const stopTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -36,7 +45,19 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
     return () => { if (previewUrl) URL.revokeObjectURL(previewUrl) }
   }, [previewUrl])
 
-  const canSend = (text.trim() || pendingFile) && !disabled && !uploading
+  useEffect(() => {
+    if (editTarget) {
+      setText(editTarget.initialText)
+      setPendingFile(null)
+      setFileError(null)
+      setTimeout(() => textareaRef.current?.focus(), 0)
+    }
+  }, [editTarget?.messageId])
+
+  const isEditing = !!editTarget
+  const canSend = isEditing
+    ? text.trim().length > 0 && !disabled
+    : (text.trim() || pendingFile) && !disabled && !uploading
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -62,7 +83,7 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value)
-    if (!chatId) return
+    if (!chatId || isEditing) return
     if (!e.target.value) { stopTyping(); return }
     const now = Date.now()
     if (now - lastTypingSentRef.current > TYPING_THROTTLE_MS) {
@@ -77,10 +98,26 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
     }, TYPING_STOP_DELAY_MS)
   }
 
+  const cancelEdit = () => {
+    onCancelEdit?.()
+    setText('')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = text.trim()
     if (!canSend) return
+
+    if (isEditing && editTarget && onSubmitEdit) {
+      try {
+        await onSubmitEdit(editTarget.messageId, trimmed)
+      } catch {
+        return
+      }
+      setText('')
+      setFileError(null)
+      return
+    }
 
     if (pendingFile) {
       setUploading(true)
@@ -107,6 +144,11 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && isEditing) {
+      e.preventDefault()
+      cancelEdit()
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit(e as unknown as React.FormEvent)
@@ -115,7 +157,22 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
 
   return (
     <div className={styles.wrapper}>
-      {pendingFile && (
+      {isEditing && (
+        <div className={styles.editBanner}>
+          <Icon.Edit size={14} />
+          <span className={styles.editBannerText}>Редактирование сообщения</span>
+          <button
+            type="button"
+            className={styles.removeFile}
+            onClick={cancelEdit}
+            aria-label="Отменить редактирование"
+            title="Отменить (Esc)"
+          >
+            <Icon.Close size={14} />
+          </button>
+        </div>
+      )}
+      {pendingFile && !isEditing && (
         <div className={styles.preview}>
           {previewUrl
             ? <img src={previewUrl} alt={pendingFile.name} className={styles.previewImage} />
@@ -139,26 +196,31 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
       {fileError && <p className={styles.fileError}>{fileError}</p>}
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.inputBar}>
-          <button
-            type="button"
-            className={styles.attachBtn}
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled || uploading}
-            title="Прикрепить файл"
-            aria-label="Прикрепить файл"
-          >
-            <Icon.Paperclip size={18} />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.txt,.zip,.mp4,.webm,.mov,.mp3,.wav,.ogg"
-            className={styles.fileInput}
-            onChange={handleFileChange}
-          />
+          {!isEditing && (
+            <>
+              <button
+                type="button"
+                className={styles.attachBtn}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={disabled || uploading}
+                title="Прикрепить файл"
+                aria-label="Прикрепить файл"
+              >
+                <Icon.Paperclip size={18} />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.txt,.zip,.mp4,.webm,.mov,.mp3,.wav,.ogg"
+                className={styles.fileInput}
+                onChange={handleFileChange}
+              />
+            </>
+          )}
           <textarea
+            ref={textareaRef}
             className={styles.input}
-            placeholder={pendingFile ? 'Подпись (необязательно)…' : 'Сообщение'}
+            placeholder={isEditing ? 'Редактируйте сообщение…' : pendingFile ? 'Подпись (необязательно)…' : 'Сообщение'}
             value={text}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
@@ -171,10 +233,10 @@ export default function MessageInput({ onSend, chatId, disabled }: Props) {
           className={styles.sendBtn}
           type="submit"
           disabled={!canSend}
-          title={uploading ? 'Загрузка…' : 'Отправить'}
-          aria-label="Отправить"
+          title={isEditing ? 'Сохранить' : uploading ? 'Загрузка…' : 'Отправить'}
+          aria-label={isEditing ? 'Сохранить' : 'Отправить'}
         >
-          <Icon.Send size={18} />
+          {isEditing ? <Icon.Check size={18} /> : <Icon.Send size={18} />}
         </button>
       </form>
     </div>

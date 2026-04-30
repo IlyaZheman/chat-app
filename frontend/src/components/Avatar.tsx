@@ -25,10 +25,26 @@ function initials(name: string) {
 interface AvatarProps {
   name: string
   size?: number
+  src?: string | null
 }
 
-export function Avatar({ name, size = 40 }: AvatarProps) {
+export function Avatar({ name, size = 40, src }: AvatarProps) {
   const [a, b] = avatarColor(name)
+  if (src) {
+    return (
+      <span
+        className={styles.avatar}
+        style={{ width: size, height: size, padding: 0, overflow: 'hidden' }}
+        aria-hidden
+      >
+        <img
+          src={src}
+          alt=""
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      </span>
+    )
+  }
   return (
     <span
       className={styles.avatar}

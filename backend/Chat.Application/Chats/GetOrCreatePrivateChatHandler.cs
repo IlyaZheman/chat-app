@@ -1,4 +1,5 @@
 using Chat.Application.Interfaces;
+using Chat.Domain.Exceptions;
 using Chat.Domain.Interfaces;
 
 namespace Chat.Application.Chats;
@@ -13,8 +14,16 @@ public class GetOrCreatePrivateChatHandler(IChatsRepository chatsRepository, ICh
 
         var chat = Domain.Models.Chat.CreatePrivate(currentUserId, targetUserId);
 
-        await chatsRepository.AddAsync(chat, ct);
-        await chatsRepository.SaveChangesAsync(ct);
+        try
+        {
+            await chatsRepository.AddAsync(chat, ct);
+            await chatsRepository.SaveChangesAsync(ct);
+        }
+        catch (ConflictException)
+        {
+            var concurrentChat = await chatsRepository.GetPrivateChatAsync(currentUserId, targetUserId, ct);
+            return concurrentChat!.Id;
+        }
 
         await notifier.NotifyNewPrivateChatAsync(targetUserId, ct);
 

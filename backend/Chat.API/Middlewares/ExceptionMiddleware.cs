@@ -28,6 +28,7 @@ public class ExceptionMiddleware(ILogger<ExceptionMiddleware> logger) : IMiddlew
         var (status, message) = ex switch
         {
             NotFoundException e => (HttpStatusCode.NotFound, e.Message),
+            UnauthorizedException e => (HttpStatusCode.Unauthorized, e.Message),
             ForbiddenException e => (HttpStatusCode.Forbidden, e.Message),
             ConflictException e => (HttpStatusCode.Conflict, e.Message),
             DomainException e => (HttpStatusCode.BadRequest, e.Message),

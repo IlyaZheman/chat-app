@@ -8,6 +8,8 @@ public class MessageEntity
     public string SenderName { get; set; } = string.Empty;
     public string Payload { get; set; } = string.Empty;
     public DateTime SentAt { get; set; }
+    public DateTime? EditedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     public ChatEntity Chat { get; set; } = null!;
     public UserEntity Sender { get; set; } = null!;

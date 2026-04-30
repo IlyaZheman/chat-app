@@ -13,9 +13,10 @@ public class DeleteGroupChatHandler(
         var chat = await chatsRepository.GetByIdAsync(chatId, ct)
             ?? throw new NotFoundException($"Chat '{chatId}' not found.");
 
-        chat.DeleteGroupChat(requesterId);
+        chat.DeleteChat(requesterId);
 
-        await notifier.NotifyChatDeletedAsync(chatId, ct);
+        var memberIds = chat.Members.Select(m => m.UserId).ToList();
+        await notifier.NotifyChatDeletedAsync(chatId, memberIds, ct);
         await chatsRepository.DeleteAsync(chatId, ct);
     }
 }

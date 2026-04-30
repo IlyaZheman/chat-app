@@ -13,7 +13,7 @@ public class LoginUserHandler(
     {
         var user = await usersRepository.GetByEmailAsync(query.Email, ct);
         if (user is null || !passwordHasher.Verify(query.Password, user.PasswordHash))
-            throw new ForbiddenException("Invalid email or password.");
+            throw new UnauthorizedException("Invalid email or password.");
 
         return jwtProvider.GenerateToken(user);
     }

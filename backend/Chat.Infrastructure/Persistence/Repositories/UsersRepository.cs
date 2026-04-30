@@ -15,7 +15,8 @@ public class UsersRepository(AppDbContext context) : IUsersRepository
             UserName = user.UserName,
             PasswordHash = user.PasswordHash,
             Email = user.Email,
-            Role = user.Role
+            Role = user.Role,
+            AvatarUrl = user.AvatarUrl
         };
 
         await context.Users.AddAsync(entity, ct);
@@ -54,9 +55,12 @@ public class UsersRepository(AppDbContext context) : IUsersRepository
     {
         await context.Users
             .Where(u => u.Id == user.Id)
-            .ExecuteUpdateAsync(s => s.SetProperty(u => u.Role, user.Role), ct);
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.UserName, user.UserName)
+                .SetProperty(u => u.AvatarUrl, user.AvatarUrl)
+                .SetProperty(u => u.Role, user.Role), ct);
     }
 
     private static User Map(UserEntity e) =>
-        User.Restore(e.Id, e.UserName, e.Email, e.PasswordHash, e.Role);
+        User.Restore(e.Id, e.UserName, e.Email, e.PasswordHash, e.Role, e.AvatarUrl);
 }

@@ -1,4 +1,4 @@
-using Chat.Domain.ValueObjects;
+using Chat.Application.Models;
 
 namespace Chat.Application.Interfaces;
 

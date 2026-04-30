@@ -12,15 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Chat.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260425135248_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260504134229_AddMutedUntilToChatMember")]
+    partial class AddMutedUntilToChatMember
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -34,13 +34,26 @@ namespace Chat.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("DefaultMemberRoleId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PrivateKey")
                         .HasColumnType("text");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PrivateKey")
+                        .IsUnique()
+                        .HasFilter("\"PrivateKey\" IS NOT NULL");
 
                     b.ToTable("Chats");
                 });
@@ -56,12 +69,18 @@ namespace Chat.Infrastructure.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Role")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
+                    b.Property<DateTime?>("LastReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("MutedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RoleId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("ChatId", "UserId");
+
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("UserId");
 
@@ -76,6 +95,12 @@ namespace Chat.Infrastructure.Migrations
 
                     b.Property<Guid>("ChatId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Payload")
                         .IsRequired()
@@ -100,11 +125,38 @@ namespace Chat.Infrastructure.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("Chat.Infrastructure.Persistence.Entities.RoleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChatId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Permissions")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChatId");
+
+                    b.ToTable("Roles");
+                });
+
             modelBuilder.Entity("Chat.Infrastructure.Persistence.Entities.UserEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -136,6 +188,11 @@ namespace Chat.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Chat.Infrastructure.Persistence.Entities.RoleEntity", "Role")
+                        .WithMany("Members")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Chat.Infrastructure.Persistence.Entities.UserEntity", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -143,6 +200,8 @@ namespace Chat.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Chat");
+
+                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });
@@ -166,11 +225,29 @@ namespace Chat.Infrastructure.Migrations
                     b.Navigation("Sender");
                 });
 
+            modelBuilder.Entity("Chat.Infrastructure.Persistence.Entities.RoleEntity", b =>
+                {
+                    b.HasOne("Chat.Infrastructure.Persistence.Entities.ChatEntity", "Chat")
+                        .WithMany("Roles")
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chat");
+                });
+
             modelBuilder.Entity("Chat.Infrastructure.Persistence.Entities.ChatEntity", b =>
                 {
                     b.Navigation("Members");
 
                     b.Navigation("Messages");
+
+                    b.Navigation("Roles");
+                });
+
+            modelBuilder.Entity("Chat.Infrastructure.Persistence.Entities.RoleEntity", b =>
+                {
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }
